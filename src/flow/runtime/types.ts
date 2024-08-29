@@ -4,7 +4,7 @@ export type PF = {
   nodes: PFNode[];
 };
 
-export type PFSingleBranch = { code?: string; name?: string; node: PFNode };
+export type PFSingleBranch = { code?: string; name?: string; nodes: PFNode[] };
 
 export interface PFNode extends Record<string, any> {
   id: string;
@@ -41,7 +41,7 @@ export interface PFNodeRuntime {
   current: PFNode;
   prev?: PFNode;
   first: PFNode;
-  list: { node: PFNode; branch?: PFSingleBranch }[];
+  visited: { node: PFNode; branch?: PFSingleBranch }[];
 }
 
 export type PFRuntime = {

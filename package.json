@@ -17,6 +17,7 @@
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "goober": "^2.1.14",
     "lucide-react": "^0.436.0",
     "postcss": "^8.4.41",
     "react": "18",
