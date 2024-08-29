@@ -10,17 +10,20 @@ import {
 export const runFlow = async (flow: PF, vars?: Record<string, any>) => {
   const runtime: PFRuntime = { nodes: flow.nodes };
 
-  const list = await flowRuntime(runtime);
-  return { status: "ok" };
+  const result = await flowRuntime(runtime, vars);
+  return { status: "ok", list: result.list, vars: result.vars };
 };
 
-const flowRuntime = async (runtime: PFRuntime) => {
+const flowRuntime = async (
+  runtime: PFRuntime,
+  defaultVars?: Record<string, any>
+) => {
   const list: { node: PFNode; branch?: PFSingleBranch }[] = [];
-  const vars = {};
+  const vars = { ...defaultVars };
   for (const current of runtime.nodes) {
     await runSingleNode({ current, list, vars });
   }
-  return list;
+  return { list, vars };
 };
 
 const runSingleNode = async (opt: {
