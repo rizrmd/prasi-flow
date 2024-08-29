@@ -8,7 +8,7 @@ export const createNode = <T extends keyof PRASI_NODE_DEFS>(
     name?: string;
     type: T;
     vars?: Record<string, any>;
-    branch?: Record<string, { code?: string; idx: number; node: PFNode }>;
+    branch?: { code?: string; name?: string; node: PFNode }[];
   }
 ) => {
   const definition = allNodeDefinitions[create.type];

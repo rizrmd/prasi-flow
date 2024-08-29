@@ -15,24 +15,22 @@ export const sampleFlow = () => {
       }),
       createNode({
         type: "condition",
-        branch: {
-          A: {
+        branch: [
+          {
             code: "node.prev.vars.result === 2",
-            idx: 0,
             node: createNode({
               type: "code",
               code: `console.log('ini code A');`,
             }),
           },
-          B: {
+          {
             code: "node.prev.vars.result !== 2",
-            idx: 1,
             node: createNode({
               type: "code",
               code: `console.log('ini code B');`,
             }),
           },
-        },
+        ],
       }),
     ],
   };
