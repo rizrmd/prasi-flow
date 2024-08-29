@@ -11,7 +11,7 @@ export type PFNode = {
   branch?: Record<string, PFNode>;
 };
 
-export interface PFNodeDefinition extends Record<string, any> {
+export type PFNodeDefinition = Record<string, any> & {
   type: string;
   vars?: Record<string, any>;
   branch?: Record<string, { mandatory?: boolean }>;
