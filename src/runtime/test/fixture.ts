@@ -2,7 +2,11 @@ import { createNode } from "../lib/create-node";
 import { PF } from "../types";
 
 export const sampleFlow = () => {
-  const start = createNode({ type: "start" });
+  const start = createNode({
+    type: "code",
+    code: `\
+alert('Holaaa')`,
+  });
   const code = createNode({
     type: "code",
     code: `\
