@@ -8,13 +8,14 @@ export type PFNode = {
   id: string;
   name?: string;
   type: string;
-  branch: Record<string, PFNode>;
+  branch?: Record<string, PFNode>;
 };
 
 export interface PFNodeDefinition extends Record<string, any> {
   type: string;
   vars?: Record<string, any>;
   branch?: Record<string, { mandatory?: boolean }>;
+  process: () => void | Promise<void>;
   fields?: Record<
     string,
     | {
