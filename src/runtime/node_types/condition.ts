@@ -1,7 +1,7 @@
 import { defineNode } from "../lib/define-node";
 
-export const nodeCode = defineNode({
-  type: "code",
+export const nodeCondition = defineNode({
+  type: "condition",
   fields: {
     code: { type: "code" },
   },
