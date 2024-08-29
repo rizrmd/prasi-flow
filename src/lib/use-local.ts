@@ -61,7 +61,7 @@ export const useLocal = <T extends object>(
 
         local.lastRender = Date.now();
 
-        if (local.lastRenderCount > 300) {
+        if (local.lastRenderCount > 1000) {
           clearTimeout(local.overRenderTimeout);
           local.overRenderTimeout = setTimeout(() => {
             local.lastRenderCount = 0;

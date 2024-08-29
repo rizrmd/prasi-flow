@@ -2,9 +2,11 @@ import {
   Background,
   Controls,
   Edge,
-  MiniMap,
   Node,
+  Position,
   ReactFlow,
+  useEdgesState,
+  useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
@@ -14,11 +16,12 @@ import { PFNode } from "./flow/runtime/types";
 export function Main() {
   const local = useLocal({
     source_flow: sampleFlow(),
-    nodes: [] as Node[],
-    edges: [] as Edge[],
   });
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   useEffect(() => {
-    const { edges, nodes } = parseNodes(local.source_flow.nodes);
+    const parsed = parseNodes(local.source_flow.nodes);
     // console.log(
     //   edges,
     //   nodes.map((e) => ({
@@ -27,11 +30,12 @@ export function Main() {
     //     label: e.data.label,
     //   }))
     // );
-    local.edges = edges;
-    local.nodes = nodes;
+    setNodes(parsed.nodes);
+    setEdges(parsed.edges);
     local.render();
   }, [local.source_flow]);
 
+  console.log();
   return (
     <div
       className={cx(
@@ -43,15 +47,39 @@ export function Main() {
         `
       )}
     >
+      <div className="absolute top-0 left-0 p-2 bg-white">
+        {JSON.stringify(
+          nodes.map((e) => ({
+            s: e.sourcePosition,
+            t: e.targetPosition,
+            x: e.position.x,
+            y: e.position.y,
+          }))
+        )}
+      </div>
       <ReactFlow
+        maxZoom={1.1}
         fitView
-        selectionOnDrag
-        nodes={local.nodes}
-        edges={local.edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodes={nodes}
+        edges={edges}
+        onNodeClick={(_, node) => {
+          node.sourcePosition =
+            node.sourcePosition === Position.Right
+              ? Position.Bottom
+              : Position.Right;
+
+          node.targetPosition =
+            node.targetPosition === Position.Top ? Position.Left : Position.Top;
+
+          const idx = nodes.findIndex((e) => e.id === node.id);
+          nodes.splice(idx, 1, node);
+          setNodes([...nodes]);
+        }}
       >
         <Background />
         <Controls />
-        <MiniMap />
       </ReactFlow>
     </div>
   );
@@ -68,6 +96,9 @@ const parseNodes = (
   for (const inode of input_nodes) {
     const node = {
       id: inode.id,
+      type: "default",
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
       data: { label: `[${inode.type}] ${inode.name}` },
       position: inode.position || {
         x: (existing?.x || 0) * 200,
@@ -101,6 +132,7 @@ const parseNodes = (
       edges.push({
         id: `${last.id}-${node.id}`,
         source: last.id,
+        type: "smoothstep",
         target: node.id,
       });
     }
