@@ -2,25 +2,17 @@ import { createNode } from "../lib/create-node";
 import { PF } from "../types";
 
 export const sampleFlow = () => {
-  const start = createNode({
-    type: "code",
-    code: `\
-() => {
-  console.log('ini code');
-}`,
-  });
-  const end = createNode({
-    type: "code",
-    code: `\
-() => {
-  console.log('ini code');
-}`,
-  });
-
   const result = {
     name: "test",
     nodes: [
-      start,
+      createNode({
+        type: "code",
+        vars: {
+          result: 2,
+          message: "horeee",
+        },
+        code: `console.log('ini code');`,
+      }),
       createNode({
         type: "condition",
         branch: {
@@ -34,7 +26,6 @@ export const sampleFlow = () => {
           }),
         },
       }),
-      end,
     ],
   };
   return result as PF;
