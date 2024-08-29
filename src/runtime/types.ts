@@ -4,18 +4,26 @@ export type PF = {
   nodes: PFNode[];
 };
 
-export type PFNode = {
+export type PFSingleBranch = { code?: string; name?: string; node: PFNode };
+
+export interface PFNode extends Record<string, any> {
   id: string;
   name?: string;
   type: string;
-  branch?: Record<string, PFNode>;
-};
+  vars?: Record<string, any>;
+  branches?: PFSingleBranch[];
+}
 
 export type PFNodeDefinition = Record<string, any> & {
   type: string;
   vars?: Record<string, any>;
-  branch?: Record<string, { mandatory?: boolean }>;
-  process: () => void | Promise<void>;
+  branches?: PFSingleBranch[];
+  process: (arg: {
+    vars: Record<string, any>;
+    node: PFNodeRuntime;
+    nextBranch: (branch?: PFSingleBranch) => void;
+    next: () => void;
+  }) => void | Promise<void>;
   fields?: Record<
     string,
     | {
@@ -27,4 +35,15 @@ export type PFNodeDefinition = Record<string, any> & {
         options: (string | { value: string; label: string })[];
       }
   >;
+};
+
+export interface PFNodeRuntime {
+  current: PFNode;
+  prev?: PFNode;
+  first: PFNode;
+  list: { node: PFNode; branch?: PFSingleBranch }[];
 }
+
+export type PFRuntime = {
+  nodes: PFNode[];
+};

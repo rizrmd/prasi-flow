@@ -6,25 +6,28 @@ export const sampleFlow = () => {
     name: "test",
     nodes: [
       createNode({
+        name: "start",
         type: "code",
         vars: {
           result: 2,
           message: "horeee",
         },
-        code: `console.log('ini code');`,
+        code: `console.log('ini node',node.current.name );`,
       }),
       createNode({
         type: "condition",
-        branch: [
+        branches: [
           {
-            code: "node.prev.vars.result === 2",
+            name: "A",
+            code: "vars.result === 2",
             node: createNode({
               type: "code",
               code: `console.log('ini code A');`,
             }),
           },
           {
-            code: "node.prev.vars.result !== 2",
+            name: "B",
+            code: "vars.result !== 2",
             node: createNode({
               type: "code",
               code: `console.log('ini code B');`,
