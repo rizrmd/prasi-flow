@@ -4,10 +4,13 @@ export type PF = {
   nodes: PFNode<any>[];
 };
 
-export type PFIO<D> = {
-  mode: "record" | "array" | "static-record";
-  default: D;
-};
+export type PFIO<D> = Record<
+  string,
+  {
+    mode: "record" | "array" | "static-record";
+    default: D;
+  }
+>;
 
 export type PFNode<A> = {
   id: string;
