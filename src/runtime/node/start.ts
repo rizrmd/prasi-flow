@@ -1,11 +1,13 @@
 import { defineNode } from "../lib/define-node";
 
-export const start = defineNode({
+export const startNode = defineNode({
   type: "start",
   input: {
     mode: "record",
+    default: {},
   },
   output: {
     mode: "record",
+    default: {},
   },
 });

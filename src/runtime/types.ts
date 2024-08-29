@@ -1,17 +1,21 @@
 export type PF = {
   name: string;
   path?: string;
-  nodes: PFNode[];
+  nodes: PFNode<any>[];
 };
 
-export type PFIO = {
+export type PFIO<D> = {
   mode: "record" | "array" | "static-record";
-  typings?: string;
-  default?: any;
+  default: D;
 };
 
-export interface PFNode extends Record<string, any> {
+export type PFNode<A> = {
+  id: string;
   type: string;
-  input?: PFIO;
-  output?: PFIO;
+  input: A;
+};
+export interface PFNodeDefinition extends Record<string, any> {
+  type: string;
+  input?: PFIO<any>;
+  output?: PFIO<any>;
 }

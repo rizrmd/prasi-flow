@@ -1,5 +1,5 @@
-import { PFNode } from "../types";
+import { PFNodeDefinition } from "../types";
 
-export const defineNode = <T extends PFNode>(arg: T) => {
-  return arg;
+export const defineNode = <T extends PFNodeDefinition>(node: T) => {
+  return node
 };
