@@ -1,6 +1,9 @@
-import { Baru } from "./baru";
-import "./main.css";
+import { Button } from "./components/ui/button";
 
 export function Main() {
-  return <>{location.pathname === "/halo" && <Baru />}</>;
+  return (
+    <>
+      <Button>INI BuTton</Button>
+    </>
+  );
 }

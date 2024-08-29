@@ -11,23 +11,29 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@radix-ui/react-icons": "^1.3.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@types/bun": "^1.1.8",
     "@xyflow/react": "^12.2.0",
+    "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.436.0",
-    "@types/bun": "^1.1.8",
+    "postcss": "^8.4.41",
     "react": "18",
     "react-dom": "18",
     "tailwind-merge": "^2.5.2",
+    "tailwindcss": "^3.4.10",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@farmfe/cli": "^1.0.2",
     "@farmfe/core": "^1.3.0",
+    "@farmfe/js-plugin-postcss": "^1.8.0",
     "@farmfe/plugin-react": "^1.2.0",
+    "@farmfe/plugin-sass": "^1.1.0",
     "@types/react": "18",
-    "core-js": "^3.36.1",
     "@types/react-dom": "18",
+    "core-js": "^3.36.1",
     "react-refresh": "^0.14.0"
   }
 }
