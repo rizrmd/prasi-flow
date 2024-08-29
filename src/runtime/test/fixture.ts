@@ -5,9 +5,11 @@ export const sampleFlow = () => {
   const start = createNode({
     type: "code",
     code: `\
-alert('Holaaa')`,
+() => {
+  console.log('ini code');
+}`,
   });
-  const code = createNode({
+  const end = createNode({
     type: "code",
     code: `\
 () => {
@@ -17,7 +19,23 @@ alert('Holaaa')`,
 
   const result = {
     name: "test",
-    nodes: [start, code],
+    nodes: [
+      start,
+      createNode({
+        type: "condition",
+        branch: {
+          A: createNode({
+            type: "code",
+            code: `console.log('ini code A');`,
+          }),
+          B: createNode({
+            type: "code",
+            code: `console.log('ini code B');`,
+          }),
+        },
+      }),
+      end,
+    ],
   };
   return result as PF;
 };
