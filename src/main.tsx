@@ -12,7 +12,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
-import { parseNodes } from "./flow/utils/node-parse";
+import { EdgeType, parseNodes } from "./flow/utils/node-parse";
 import { getLayoutedElements } from "./flow/utils/node-utils";
 import { MagicWandIcon } from "@radix-ui/react-icons";
 import { isMainPFNode } from "./flow/utils/is-main-node";
@@ -235,7 +235,7 @@ export function Main() {
                     id: `${from.id}-${to.id}`,
                     source: from.id,
                     target: to.id,
-                    type: "smoothstep",
+                    type: EdgeType,
                   },
                 ]);
               }

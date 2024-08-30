@@ -1,6 +1,8 @@
 import { PFNode } from "../runtime/types";
 import { Edge, Node, Position } from "@xyflow/react";
 
+export const EdgeType = "default";
+
 // parsing PF node punya prasi ke node punya react flow
 export const parseNodes = (
   input_nodes: PFNode[],
@@ -54,7 +56,7 @@ export const parseNodes = (
         id: `start-${node.id}`,
         source: "start",
         target: node.id,
-        type: "smoothstep",
+        type: EdgeType,
       });
     }
 
@@ -67,7 +69,7 @@ export const parseNodes = (
             id: `${node.id}-${branch.nodes[0].id}`,
             source: node.id,
             target: branch.nodes[0].id,
-            type: "smoothstep",
+            type: EdgeType,
             label: branch.name,
           });
           parseNodes(branch.nodes, {
@@ -87,7 +89,7 @@ export const parseNodes = (
       edges.push({
         id: `${last.id}-${node.id}`,
         source: last.id,
-        type: "smoothstep",
+        type: EdgeType,
         target: node.id,
       });
     }
