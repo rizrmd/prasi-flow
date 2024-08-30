@@ -1,3 +1,4 @@
+import { MagicWandIcon } from "@radix-ui/react-icons";
 import {
   Background,
   ControlButton,
@@ -12,12 +13,11 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
-import { EdgeType, parseNodes } from "./flow/utils/node-parse";
-import { getLayoutedElements } from "./flow/utils/node-utils";
-import { MagicWandIcon } from "@radix-ui/react-icons";
-import { isMainPFNode } from "./flow/utils/is-main-node";
 import { PF } from "./flow/runtime/types";
-import { findPFNode, loopPFNode } from "./flow/utils/find-node";
+import { findPFNode } from "./flow/utils/find-node";
+import { isMainPFNode } from "./flow/utils/is-main-node";
+import { getLayoutedElements } from "./flow/utils/node-utils";
+import { EdgeType, parseNodes } from "./flow/utils/parse-node";
 
 export function Main() {
   const local = useLocal({
@@ -45,26 +45,16 @@ export function Main() {
     }
     if (pf) {
       local.pf = pf;
-      savePF();
-      const parsed = parseNodes(pf.main_nodes);
-
-      const start = parsed.nodes.find((e) => e.id === "start");
-      if (start && pf.meta) {
-        start.position = pf.meta?.start.position;
-      }
-
-      for (const spare_nodes of pf.spare_nodes) {
-        const spare = parseNodes(spare_nodes, { is_spare: true });
-        parsed.nodes = [...parsed.nodes, ...spare.nodes];
-        parsed.edges = [...parsed.edges, ...spare.edges];
-      }
+      const parsed = parseNodes(pf.nodes, pf.flow);
 
       if (relayout) {
-        relayoutNodes(parsed);
+        relayoutNodes({ nodes: parsed.nodes, edges: parsed.edges });
       } else {
         setNodes(parsed.nodes);
         setEdges(parsed.edges);
       }
+
+      savePF();
     }
   }, []);
 
@@ -79,28 +69,11 @@ export function Main() {
     setEdges([...layoutedEdges]);
 
     if (local.pf) {
-      let start_node = layoutedNodes.find((e) => e.id === "start");
-      if (start_node) {
-        if (!local.pf.meta) {
-          local.pf.meta = { start: { position: { x: 0, y: 0 } } };
+      for (const n of layoutedNodes) {
+        const node = local.pf.nodes[n.id];
+        if (node) {
+          node.position = n.position;
         }
-        local.pf.meta.start.position = start_node.position;
-      }
-      loopPFNode(local.pf.main_nodes, ({ node }) => {
-        const found = layoutedNodes.find((e) => e.id === node.id);
-        if (found) {
-          node.position = found.position;
-        }
-        return true;
-      });
-      for (const spare of local.pf.spare_nodes) {
-        loopPFNode(spare, ({ node }) => {
-          const found = layoutedNodes.find((e) => e.id === node.id);
-          if (found) {
-            node.position = found.position;
-          }
-          return true;
-        });
       }
 
       savePF();
@@ -123,19 +96,19 @@ export function Main() {
             display: none;
           }
 
-          .pfn-start {
-            border: 1px solid green;
-            width: 60px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9px;
-            background-color: #edffed;
-          }
-
           .react-flow__node {
             cursor: pointer;
+
+            &.start {
+              border: 1px solid green;
+              width: 60px;
+              height: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 9px;
+              background-color: #edffed;
+            }
 
             &:hover {
               background-color: #e8f3ff;
@@ -182,10 +155,6 @@ export function Main() {
           if (pf) {
             for (const c of changes) {
               if (c.type === "position") {
-                const node = pf.main_nodes.find((e) => e.id === c.id);
-                if (node) {
-                  node.position = c.position;
-                }
               }
             }
           }
@@ -201,12 +170,6 @@ export function Main() {
                   if (isMainPFNode({ id: edge.target, edges })) {
                     const found = findPFNode({ id: edge.target, pf });
                     if (found) {
-                      pf.spare_nodes.push(
-                        found.nodes.splice(
-                          found.idx,
-                          found.nodes.length - found.idx
-                        )
-                      );
                       savePF();
                     }
                   }

@@ -1,15 +1,13 @@
+export type PFNodeID = string;
+
 export type PF = {
   name: string;
   path?: string;
-  main_nodes: PFNode[]; // nodes yg nyambung ke start, dan start cuma 1
-  spare_nodes: PFNode[][]; // nodes yg tidak nyambung ke main
-  meta?: {
-    // meta adalah informasi PF yg bukan bisnis proses
-    start: { position: { x: number; y: number } };
-  };
+  nodes: Record<PFNodeID, PFNode>;
+  flow: PFNodeID[];
 };
 
-export type PFSingleBranch = { code?: string; name?: string; nodes: PFNode[] };
+export type PFSingleBranch = { code?: string; name?: string; flow: PFNodeID[] };
 
 export interface PFNode extends Record<string, any> {
   id: string;
@@ -19,7 +17,6 @@ export interface PFNode extends Record<string, any> {
   branches?: PFSingleBranch[];
   position?: { x: number; y: number };
 }
-
 
 export type PFNodeDefinition = Record<string, any> & {
   type: string;

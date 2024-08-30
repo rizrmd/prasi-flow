@@ -5,7 +5,7 @@ const nodeWidth = 172;
 const nodeHeight = 36;
 
 export const getSize = (node: Node) => {
-  if (node.id === "start") {
+  if (node.data.type === "start") {
     return { w: 82, h: 20 };
   }
   return { w: nodeWidth, h: nodeHeight };
