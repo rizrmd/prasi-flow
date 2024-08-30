@@ -31,7 +31,7 @@ export const parseNodes = (
   for (const inode of flow_nodes) {
     const node = {
       id: inode.id,
-      type: "default",
+      type: inode.type === "start" ? "input" : "default",
       className: inode.type,
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
