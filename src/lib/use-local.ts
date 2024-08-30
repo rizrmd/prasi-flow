@@ -37,7 +37,7 @@ export const useLocal = <T extends object>(
       });
   }, []);
 
-  if (local.ready === false) {
+  if (!local.ready) {
     local._loading = {};
 
     local.data.render = () => {
