@@ -6,7 +6,13 @@ export const parseNodes = (
   input_nodes: PFNode[],
   opt?: {
     is_spare?: boolean;
-    existing?: { nodes: Node[]; edges: Edge[]; x: number; y: number };
+    existing?: {
+      nodes: Node[];
+      edges: Edge[];
+      x: number;
+      y: number;
+      next_inodes: PFNode[];
+    };
   }
 ) => {
   const existing = opt?.existing || undefined;
@@ -27,7 +33,9 @@ export const parseNodes = (
     nodes.push(node);
   }
 
-  for (const inode of input_nodes) {
+  const final_node = [...input_nodes, ...(existing?.next_inodes || [])];
+
+  for (const inode of final_node) {
     const node = {
       id: inode.id,
       type: "default",
@@ -68,6 +76,7 @@ export const parseNodes = (
               edges,
               x: i++ - 0.5,
               y: by,
+              next_inodes: final_node.slice(y),
             },
           });
         }
@@ -85,6 +94,10 @@ export const parseNodes = (
 
     last = node;
     nodes.push(node);
+
+    if (inode.branches) {
+      break;
+    }
   }
   return { nodes, edges };
 };
