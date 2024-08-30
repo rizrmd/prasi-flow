@@ -23,7 +23,7 @@ export const sampleFlow = () => {
             code: "vars.result === 2",
             nodes: [
               createNode({
-                name: 'Code A',
+                name: "Code A",
                 type: "code",
                 code: `console.log('ini code A');`,
               }),
@@ -34,12 +34,23 @@ export const sampleFlow = () => {
             code: "vars.result !== 2",
             nodes: [
               createNode({
-                name: 'Code B',
+                name: "Code B",
                 type: "code",
                 code: `console.log('ini code B');`,
               }),
             ],
           },
+          // {
+          //   name: "Branch C",
+          //   code: "vars.result === 2",
+          //   nodes: [
+          //     createNode({
+          //       name: "Code C",
+          //       type: "code",
+          //       code: `console.log('ini code C');`,
+          //     }),
+          //   ],
+          // },
         ],
       }),
     ],

@@ -9,9 +9,13 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import dagre from "dagre";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
 import { PFNode } from "./flow/runtime/types";
+
+const dagreGraph = new dagre.graphlib.Graph();
+dagreGraph.setDefaultEdgeLabel(() => ({}));
 
 export function Main() {
   const local = useLocal({
@@ -22,20 +26,17 @@ export function Main() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   useEffect(() => {
     const parsed = parseNodes(local.source_flow.nodes);
-    // console.log(
-    //   edges,
-    //   nodes.map((e) => ({
-    //     x: e.position.x,
-    //     y: e.position.y,
-    //     label: e.data.label,
-    //   }))
-    // );
-    setNodes(parsed.nodes);
-    setEdges(parsed.edges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      parsed.nodes,
+      parsed.edges,
+      "TB"
+    );
+
+    setNodes([...layoutedNodes]);
+    setEdges([...layoutedEdges]);
     local.render();
   }, [local.source_flow]);
 
-  console.log();
   return (
     <div
       className={cx(
@@ -44,10 +45,21 @@ export function Main() {
           .react-flow__attribution {
             display: none;
           }
+
+          .pfn-start {
+            border: 1px solid green;
+            width: 60px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background-color: #edffed;
+          }
         `
       )}
     >
-      <div className="absolute top-0 left-0 p-2 bg-white">
+      {/* <div className="absolute top-0 left-0 p-2 bg-white">
         {JSON.stringify(
           nodes.map((e) => ({
             s: e.sourcePosition,
@@ -56,27 +68,61 @@ export function Main() {
             y: e.position.y,
           }))
         )}
-      </div>
+      </div> */}
       <ReactFlow
         maxZoom={1.1}
         fitView
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={(changes) => {
+          for (const c of changes) {
+            if (c.type === "position") {
+              const node = local.source_flow.nodes.find((e) => e.id === c.id);
+              if (node) {
+                node.position = c.position;
+              }
+            }
+          }
+          return onNodesChange(changes);
+        }}
+        onEdgesChange={(changes) => {
+          return onEdgesChange(changes);
+        }}
         nodes={nodes}
         edges={edges}
-        onNodeClick={(_, node) => {
-          node.sourcePosition =
-            node.sourcePosition === Position.Right
-              ? Position.Bottom
-              : Position.Right;
-
-          node.targetPosition =
-            node.targetPosition === Position.Top ? Position.Left : Position.Top;
-
-          const idx = nodes.findIndex((e) => e.id === node.id);
-          nodes.splice(idx, 1, node);
-          setNodes([...nodes]);
+        onConnectEnd={(_, state) => {
+          if (state.isValid) {
+            const from = state.fromNode;
+            const to = state.toNode;
+            if (from && to) {
+              const found = edges.find((e) => {
+                return e.source === from.id && e.target === to.id;
+              });
+              if (!found) {
+                setEdges([
+                  ...edges,
+                  {
+                    id: `${from.id}-${to.id}`,
+                    source: from.id,
+                    target: to.id,
+                    type: "smoothstep",
+                  },
+                ]);
+              }
+            }
+          }
         }}
+        // onNodeClick={(_, node) => {
+        //   node.sourcePosition =
+        //     node.sourcePosition === Position.Right
+        //       ? Position.Bottom
+        //       : Position.Right;
+
+        //   node.targetPosition =
+        //     node.targetPosition === Position.Top ? Position.Left : Position.Top;
+
+        //   const idx = nodes.findIndex((e) => e.id === node.id);
+        //   nodes.splice(idx, 1, node);
+        //   setNodes([...nodes]);
+        // }}
       >
         <Background />
         <Controls />
@@ -93,6 +139,18 @@ const parseNodes = (
   const edges: Edge[] = existing ? existing.edges : [];
   let last = null as null | Node;
   let y = 0;
+
+  if (nodes.length === 0 && !existing) {
+    const node = {
+      id: "start",
+      type: "input",
+      data: { label: "Start" },
+      className: "pfn-start",
+      position: { x: 0, y: -100 },
+    };
+    nodes.push(node);
+  }
+
   for (const inode of input_nodes) {
     const node = {
       id: inode.id,
@@ -107,6 +165,15 @@ const parseNodes = (
     };
     y++;
 
+    if (nodes.length === 1 && !existing) {
+      edges.push({
+        id: `start-${node.id}`,
+        source: "start",
+        target: node.id,
+        type: "smoothstep",
+      });
+    }
+
     if (inode.branches) {
       let i = 0;
       let by = y;
@@ -117,11 +184,12 @@ const parseNodes = (
             source: node.id,
             target: branch.nodes[0].id,
             type: "smoothstep",
+            label: branch.name,
           });
           parseNodes(branch.nodes, {
             nodes,
             edges,
-            x: i++,
+            x: i++ - 0.5,
             y: by,
           });
         }
@@ -141,4 +209,55 @@ const parseNodes = (
     nodes.push(node);
   }
   return { nodes, edges };
+};
+
+const nodeWidth = 172;
+const nodeHeight = 36;
+
+const getSize = (node: Node) => {
+  if (node.id === "start") {
+    return { w: 82, h: 20 };
+  }
+  return { w: nodeWidth, h: nodeHeight };
+};
+
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  direction = "TB"
+) => {
+  const isHorizontal = direction === "LR";
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, {
+      width: getSize(node).w,
+      height: getSize(node).h,
+    });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const newNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    const newNode = {
+      ...node,
+      targetPosition: isHorizontal ? "left" : "top",
+      sourcePosition: isHorizontal ? "right" : "bottom",
+      // We are shifting the dagre node position (anchor=center center) to the top left
+      // so it matches the React Flow node anchor point (top left).
+      position: {
+        x: nodeWithPosition.x - getSize(node).w / 2,
+        y: nodeWithPosition.y - getSize(node).h / 2,
+      },
+    };
+
+    return newNode;
+  });
+
+  return { nodes: newNodes as Node[], edges: edges as Edge[] };
 };
