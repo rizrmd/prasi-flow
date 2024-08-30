@@ -1,8 +1,8 @@
 import { createNode } from "../lib/create-node";
 import { PF } from "../types";
 
-export const sampleFlow = () => {
-  const result = {
+export const sampleFlow: () => PF = () => {
+  return {
     name: "test",
     spare_nodes: [],
     main_nodes: [
@@ -24,7 +24,12 @@ export const sampleFlow = () => {
             code: "vars.result === 2",
             nodes: [
               createNode({
-                name: "Code A",
+                name: "Code A1",
+                type: "code",
+                code: `console.log('ini code A');`,
+              }),
+              createNode({
+                name: "Code A2",
                 type: "code",
                 code: `console.log('ini code A');`,
               }),
@@ -35,7 +40,12 @@ export const sampleFlow = () => {
             code: "vars.result !== 2",
             nodes: [
               createNode({
-                name: "Code B",
+                name: "Code B1",
+                type: "code",
+                code: `console.log('ini code B');`,
+              }),
+              createNode({
+                name: "Code B2",
                 type: "code",
                 code: `console.log('ini code B');`,
               }),
@@ -54,7 +64,11 @@ export const sampleFlow = () => {
           // },
         ],
       }),
+      createNode({
+        name: "Code D",
+        type: "code",
+        code: `console.log('ini code D');`,
+      }),
     ],
   };
-  return result as PF;
 };
