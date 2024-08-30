@@ -80,7 +80,7 @@ export const sampleFlow: () => PF = () => {
                       }),
                     ],
                   },
-                ]
+                ],
               }),
             ],
           },
@@ -99,8 +99,41 @@ export const sampleFlow: () => PF = () => {
       }),
       createNode({
         name: "Code D",
-        type: "code",
-        code: `console.log('ini code D');`,
+        type: "condition",
+        branches: [
+          {
+            name: "Branch C1",
+            code: "vars.result === 2",
+            nodes: [
+              createNode({
+                name: "Code C1",
+                type: "code",
+                code: `console.log('ini code A');`,
+              }),
+              createNode({
+                name: "Code C2",
+                type: "code",
+                code: `console.log('ini code A');`,
+              }),
+            ],
+          },
+          {
+            name: "Branch C2",
+            code: "vars.result === 2",
+            nodes: [
+              createNode({
+                name: "Code C3",
+                type: "code",
+                code: `console.log('ini code A');`,
+              }),
+              createNode({
+                name: "Code C4",
+                type: "code",
+                code: `console.log('ini code A');`,
+              }),
+            ],
+          },
+        ],
       }),
     ],
   };

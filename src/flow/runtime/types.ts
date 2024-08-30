@@ -3,7 +3,8 @@ export type PF = {
   path?: string;
   main_nodes: PFNode[]; // nodes yg nyambung ke start, dan start cuma 1
   spare_nodes: PFNode[][]; // nodes yg tidak nyambung ke main
-  meta?: { // meta adalah informasi PF yg bukan bisnis proses
+  meta?: {
+    // meta adalah informasi PF yg bukan bisnis proses
     start: { position: { x: number; y: number } };
   };
 };
@@ -18,6 +19,7 @@ export interface PFNode extends Record<string, any> {
   branches?: PFSingleBranch[];
   position?: { x: number; y: number };
 }
+
 
 export type PFNodeDefinition = Record<string, any> & {
   type: string;
