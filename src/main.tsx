@@ -28,6 +28,7 @@ export function Main() {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
 
+  // ini sementara save ke localStorage, nanti akan diganti save ke file di prasi
   const savePF = () => {
     localStorage.setItem("pf-local", JSON.stringify(local.pf));
   };

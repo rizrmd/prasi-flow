@@ -1,6 +1,7 @@
 import { PFNode } from "../runtime/types";
 import { Edge, Node, Position } from "@xyflow/react";
 
+// parsing PF node punya prasi ke node punya react flow
 export const parseNodes = (
   input_nodes: PFNode[],
   opt?: {

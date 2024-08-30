@@ -1,9 +1,9 @@
 export type PF = {
   name: string;
   path?: string;
-  main_nodes: PFNode[];
-  spare_nodes: PFNode[][];
-  meta?: {
+  main_nodes: PFNode[]; // nodes yg nyambung ke start, dan start cuma 1
+  spare_nodes: PFNode[][]; // nodes yg tidak nyambung ke main
+  meta?: { // meta adalah informasi PF yg bukan bisnis proses
     start: { position: { x: number; y: number } };
   };
 };
