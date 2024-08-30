@@ -45,7 +45,16 @@ export function Main() {
     }
     if (pf) {
       local.pf = pf;
-      const parsed = parseNodes(pf.nodes, pf.flow);
+      const parsed = parseNodes(pf.nodes, pf.main_flow);
+
+      const spare_flows = Object.values(pf.spare_flow);
+      if (spare_flows.length > 0) {
+        for (const flow of spare_flows) {
+          const spare = parseNodes(pf.nodes, flow);
+          parsed.nodes = [...parsed.nodes, ...spare.nodes];
+          parsed.edges = [...parsed.edges, ...spare.edges];
+        }
+      }
 
       if (relayout) {
         relayoutNodes({ nodes: parsed.nodes, edges: parsed.edges });
@@ -167,9 +176,20 @@ export function Main() {
               if (c.type === "remove") {
                 const edge = edges.find((e) => e.id === c.id);
                 if (edge) {
-                  if (isMainPFNode({ id: edge.target, edges })) {
+                  if (
+                    isMainPFNode({ id: edge.target, nodes: pf.nodes, edges })
+                  ) {
                     const found = findPFNode({ id: edge.target, pf });
                     if (found) {
+                      const spare_flow = found.flow.splice(
+                        found.idx,
+                        found.flow.length - found.idx
+                      );
+
+                      if (spare_flow.length > 0) {
+                        pf.spare_flow[spare_flow[0]] = spare_flow;
+                      }
+
                       savePF();
                     }
                   }

@@ -1,13 +1,22 @@
 import { Edge } from "@xyflow/react";
+import { PFNode } from "../runtime/types";
 
-export const isMainPFNode = ({ id, edges }: { id: string; edges: Edge[] }) => {
+export const isMainPFNode = ({
+  id,
+  nodes,
+  edges,
+}: {
+  id: string;
+  nodes: Record<string, PFNode>;
+  edges: Edge[];
+}) => {
   const visited = new Set<string>();
   let current_id = id;
   let edge_found = edges.find((e) => e.target === current_id);
   while (edge_found) {
     current_id = edge_found.source;
 
-    if (current_id === "start") {
+    if (nodes[current_id]?.type === "start") {
       return true;
       break;
     }

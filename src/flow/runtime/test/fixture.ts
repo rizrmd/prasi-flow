@@ -32,6 +32,7 @@ export const sampleFlow: () => PF = () => {
   return {
     name: "test",
     nodes: nodes,
-    flow: [a, b, c, i],
+    main_flow: [a, b, c, i],
+    spare_flow: {},
   };
 };

@@ -1,43 +1,34 @@
-import { PF, PFNode } from "../runtime/types";
+import { PF, PFNode, PFNodeID } from "../runtime/types";
 
 export const findPFNode = ({ id, pf }: { id: string; pf: PF }) => {
-  let result = { nodes: [] as PFNode[], idx: -1, node: null as null | PFNode };
-  loopPFNode(
-    pf.nodes,
-    pf.flow.map((id) => pf.nodes[id]),
-    ({ nodes, idx, node }) => {
-      if (node.id === id) {
-        result = { nodes, idx, node };
-        return false;
-      }
-
-      return true;
+  let result = { flow: [] as PFNodeID[], idx: -1 };
+  loopPFNode(pf.nodes, pf.main_flow, ({ flow, idx }) => {
+    if (flow[idx] === id) {
+      result = { flow, idx };
+      return false;
     }
-  );
+
+    return true;
+  });
 
   return result;
 };
 
 export const loopPFNode = (
   nodes: Record<string, PFNode>,
-  flow: PFNode[],
-  fn: (arg: { nodes: PFNode[]; idx: number; node: PFNode }) => boolean
+  flow: PFNodeID[],
+  fn: (arg: { flow: PFNodeID[]; idx: number }) => boolean
 ) => {
   let idx = 0;
-  for (const node of flow) {
-    if (!fn({ nodes: flow, idx, node })) {
+  for (const id of flow) {
+    if (!fn({ flow, idx })) {
       return false;
     }
-    if (node.branches) {
+    const node = nodes[id];
+    if (node && node.branches) {
       for (const branch of node.branches) {
         if (branch.flow.length > 0) {
-          if (
-            !loopPFNode(
-              nodes,
-              branch.flow.map((id) => nodes[id]),
-              fn
-            )
-          ) {
+          if (!loopPFNode(nodes, branch.flow, fn)) {
             return false;
           }
         }

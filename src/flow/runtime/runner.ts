@@ -8,7 +8,7 @@ import {
 } from "./types";
 
 export const runFlow = async (pf: PF, vars?: Record<string, any>) => {
-  const runtime: PFRuntime = { nodes: pf.flow.map((id) => pf.nodes[id]) };
+  const runtime: PFRuntime = { nodes: pf.main_flow.map((id) => pf.nodes[id]) };
 
   const result = await flowRuntime(pf, runtime, vars);
   return { status: "ok", visited: result.visited, vars: result.vars };
