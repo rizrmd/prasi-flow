@@ -2,6 +2,7 @@ export type PF = {
   name: string;
   path?: string;
   nodes: PFNode[];
+  spare_nodes: PFNode[][];
 };
 
 export type PFSingleBranch = { code?: string; name?: string; nodes: PFNode[] };

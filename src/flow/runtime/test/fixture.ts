@@ -4,6 +4,7 @@ import { PF } from "../types";
 export const sampleFlow = () => {
   const result = {
     name: "test",
+    spare_nodes: [],
     nodes: [
       createNode({
         name: "start",

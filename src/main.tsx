@@ -1,41 +1,104 @@
 import {
   Background,
+  ControlButton,
   Controls,
   Edge,
   Node,
-  Position,
   ReactFlow,
+  ReactFlowInstance,
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import dagre from "dagre";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
-import { PFNode } from "./flow/runtime/types";
-
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
+import { parseNodes } from "./flow/utils/node-parse";
+import { getLayoutedElements } from "./flow/utils/node-utils";
+import { MagicWandIcon } from "@radix-ui/react-icons";
+import { isMainPFNode } from "./flow/utils/is-main-node";
+import { PF } from "./flow/runtime/types";
+import { findPFNode, loopPFNode } from "./flow/utils/find-node";
 
 export function Main() {
   const local = useLocal({
-    source_flow: sampleFlow(),
+    pf: null as null | PF,
+    reactflow: null as null | ReactFlowInstance<Node, Edge>,
   });
 
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
+
+  const savePF = () => {
+    localStorage.setItem("pf-local", JSON.stringify(local.pf));
+  };
+
   useEffect(() => {
-    const parsed = parseNodes(local.source_flow.nodes);
+    const temp = localStorage.getItem("pf-local");
+    let pf = null as null | PF;
+    let relayout = false;
+    if (temp) {
+      pf = JSON.parse(temp);
+    } else {
+      pf = sampleFlow();
+      relayout = true;
+    }
+    if (pf) {
+      local.pf = pf;
+      savePF();
+      const parsed = parseNodes(pf.nodes);
+
+      for (const spare_nodes of pf.spare_nodes) {
+        const spare = parseNodes(spare_nodes, { is_spare: true });
+        parsed.nodes = [...parsed.nodes, ...spare.nodes];
+        parsed.edges = [...parsed.edges, ...spare.edges];
+      }
+
+      if (relayout) {
+        relayoutNodes(parsed);
+      } else {
+        setNodes(parsed.nodes);
+        setEdges(parsed.edges);
+      }
+    }
+  }, []);
+
+  const relayoutNodes = (arg?: { nodes: Node[]; edges: Edge[] }) => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-      parsed.nodes,
-      parsed.edges,
+      arg?.nodes || nodes,
+      arg?.edges || edges,
       "TB"
     );
 
     setNodes([...layoutedNodes]);
     setEdges([...layoutedEdges]);
-    local.render();
-  }, [local.source_flow]);
+
+    if (local.pf) {
+      loopPFNode(local.pf.nodes, ({ node }) => {
+        const found = layoutedNodes.find((e) => e.id === node.id);
+        if (found) {
+          node.position = found.position;
+        }
+        return true;
+      });
+      for (const spare of local.pf.spare_nodes) {
+        loopPFNode(spare, ({ node }) => {
+          const found = layoutedNodes.find((e) => e.id === node.id);
+          if (found) {
+            node.position = found.position;
+          }
+          return true;
+        });
+      }
+      savePF();
+    }
+
+    const ref = local.reactflow;
+    if (ref) {
+      setTimeout(() => {
+        ref.fitView();
+      });
+    }
+  };
 
   return (
     <div
@@ -56,6 +119,31 @@ export function Main() {
             border-radius: 9px;
             background-color: #edffed;
           }
+
+          .react-flow__node {
+            cursor: pointer;
+
+            &:hover {
+              background-color: #e8f3ff;
+            }
+            &.selected {
+              outline: 1px solid blue;
+              border: 1px solid blue;
+              background-color: #e8f3ff;
+            }
+          }
+
+          .react-flow__edge {
+            &.selected {
+              .react-flow__edge-path {
+                stroke-width: 2px;
+                stroke: blue;
+              }
+              .react-flow__edge-text {
+                fill: blue;
+              }
+            }
+          }
         `
       )}
     >
@@ -72,23 +160,53 @@ export function Main() {
       <ReactFlow
         maxZoom={1.1}
         fitView
+        onInit={(ref) => {
+          local.reactflow = ref;
+        }}
         onNodesChange={(changes) => {
-          for (const c of changes) {
-            if (c.type === "position") {
-              const node = local.source_flow.nodes.find((e) => e.id === c.id);
-              if (node) {
-                node.position = c.position;
+          const pf = local.pf;
+          if (pf) {
+            for (const c of changes) {
+              if (c.type === "position") {
+                const node = pf.nodes.find((e) => e.id === c.id);
+                if (node) {
+                  node.position = c.position;
+                }
               }
             }
           }
           return onNodesChange(changes);
         }}
         onEdgesChange={(changes) => {
+          const pf = local.pf;
+          if (pf) {
+            for (const c of changes) {
+              if (c.type === "remove") {
+                const edge = edges.find((e) => e.id === c.id);
+                if (edge) {
+                  if (isMainPFNode({ id: edge.target, edges })) {
+                    const found = findPFNode({ id: edge.target, pf });
+                    if (found) {
+                      pf.spare_nodes.push(
+                        found.nodes.splice(
+                          found.idx,
+                          found.nodes.length - found.idx
+                        )
+                      );
+                      savePF();
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           return onEdgesChange(changes);
         }}
         nodes={nodes}
         edges={edges}
         onConnectEnd={(_, state) => {
+          console.log(state);
           if (state.isValid) {
             const from = state.fromNode;
             const to = state.toNode;
@@ -110,154 +228,26 @@ export function Main() {
             }
           }
         }}
-        // onNodeClick={(_, node) => {
-        //   node.sourcePosition =
-        //     node.sourcePosition === Position.Right
-        //       ? Position.Bottom
-        //       : Position.Right;
-
-        //   node.targetPosition =
-        //     node.targetPosition === Position.Top ? Position.Left : Position.Top;
-
-        //   const idx = nodes.findIndex((e) => e.id === node.id);
-        //   nodes.splice(idx, 1, node);
-        //   setNodes([...nodes]);
-        // }}
+        onNodeClick={(_, node) => {
+          // const result = isMainNode({ id: node.id, nodes, edges });
+          // node.sourcePosition =
+          //   node.sourcePosition === Position.Right
+          //     ? Position.Bottom
+          //     : Position.Right;
+          // node.targetPosition =
+          //   node.targetPosition === Position.Top ? Position.Left : Position.Top;
+          // const idx = nodes.findIndex((e) => e.id === node.id);
+          // nodes.splice(idx, 1, node);
+          // setNodes([...nodes]);
+        }}
       >
         <Background />
-        <Controls />
+        <Controls position="top-left">
+          <ControlButton onClick={() => relayoutNodes()}>
+            <MagicWandIcon />
+          </ControlButton>
+        </Controls>
       </ReactFlow>
     </div>
   );
 }
-
-const parseNodes = (
-  input_nodes: PFNode[],
-  existing?: { nodes: Node[]; edges: Edge[]; x: number; y: number }
-) => {
-  const nodes: Node[] = existing ? existing.nodes : [];
-  const edges: Edge[] = existing ? existing.edges : [];
-  let last = null as null | Node;
-  let y = 0;
-
-  if (nodes.length === 0 && !existing) {
-    const node = {
-      id: "start",
-      type: "input",
-      data: { label: "Start" },
-      className: "pfn-start",
-      position: { x: 0, y: -100 },
-    };
-    nodes.push(node);
-  }
-
-  for (const inode of input_nodes) {
-    const node = {
-      id: inode.id,
-      type: "default",
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
-      data: { label: `[${inode.type}] ${inode.name}` },
-      position: inode.position || {
-        x: (existing?.x || 0) * 200,
-        y: ((existing?.y || 0) + y) * 100,
-      },
-    };
-    y++;
-
-    if (nodes.length === 1 && !existing) {
-      edges.push({
-        id: `start-${node.id}`,
-        source: "start",
-        target: node.id,
-        type: "smoothstep",
-      });
-    }
-
-    if (inode.branches) {
-      let i = 0;
-      let by = y;
-      for (const branch of inode.branches) {
-        if (branch.nodes.length > 0) {
-          edges.push({
-            id: `${node.id}-${branch.nodes[0].id}`,
-            source: node.id,
-            target: branch.nodes[0].id,
-            type: "smoothstep",
-            label: branch.name,
-          });
-          parseNodes(branch.nodes, {
-            nodes,
-            edges,
-            x: i++ - 0.5,
-            y: by,
-          });
-        }
-      }
-    }
-
-    if (last) {
-      edges.push({
-        id: `${last.id}-${node.id}`,
-        source: last.id,
-        type: "smoothstep",
-        target: node.id,
-      });
-    }
-
-    last = node;
-    nodes.push(node);
-  }
-  return { nodes, edges };
-};
-
-const nodeWidth = 172;
-const nodeHeight = 36;
-
-const getSize = (node: Node) => {
-  if (node.id === "start") {
-    return { w: 82, h: 20 };
-  }
-  return { w: nodeWidth, h: nodeHeight };
-};
-
-const getLayoutedElements = (
-  nodes: Node[],
-  edges: Edge[],
-  direction = "TB"
-) => {
-  const isHorizontal = direction === "LR";
-  dagreGraph.setGraph({ rankdir: direction });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, {
-      width: getSize(node).w,
-      height: getSize(node).h,
-    });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  const newNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    const newNode = {
-      ...node,
-      targetPosition: isHorizontal ? "left" : "top",
-      sourcePosition: isHorizontal ? "right" : "bottom",
-      // We are shifting the dagre node position (anchor=center center) to the top left
-      // so it matches the React Flow node anchor point (top left).
-      position: {
-        x: nodeWithPosition.x - getSize(node).w / 2,
-        y: nodeWithPosition.y - getSize(node).h / 2,
-      },
-    };
-
-    return newNode;
-  });
-
-  return { nodes: newNodes as Node[], edges: edges as Edge[] };
-};
