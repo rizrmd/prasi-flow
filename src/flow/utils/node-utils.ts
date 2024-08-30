@@ -14,7 +14,7 @@ export const getSize = (node: Node) => {
 export const getLayoutedElements = (
   nodes: Node[],
   edges: Edge[],
-  direction = "TB"
+  direction: "TB" | "LR" = "TB"
 ) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
