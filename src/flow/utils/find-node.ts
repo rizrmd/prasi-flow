@@ -2,7 +2,7 @@ import { PF, PFNode } from "../runtime/types";
 
 export const findPFNode = ({ id, pf }: { id: string; pf: PF }) => {
   let result = { nodes: [] as PFNode[], idx: -1, node: null as null | PFNode };
-  loopPFNode(pf.nodes, ({ nodes, idx, node }) => {
+  loopPFNode(pf.main_nodes, ({ nodes, idx, node }) => {
     if (node.id === id) {
       result = { nodes, idx, node };
       return false;

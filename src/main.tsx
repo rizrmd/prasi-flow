@@ -45,7 +45,12 @@ export function Main() {
     if (pf) {
       local.pf = pf;
       savePF();
-      const parsed = parseNodes(pf.nodes);
+      const parsed = parseNodes(pf.main_nodes);
+
+      const start = parsed.nodes.find((e) => e.id === "start");
+      if (start && pf.meta) {
+        start.position = pf.meta?.start.position;
+      }
 
       for (const spare_nodes of pf.spare_nodes) {
         const spare = parseNodes(spare_nodes, { is_spare: true });
@@ -73,7 +78,14 @@ export function Main() {
     setEdges([...layoutedEdges]);
 
     if (local.pf) {
-      loopPFNode(local.pf.nodes, ({ node }) => {
+      let start_node = layoutedNodes.find((e) => e.id === "start");
+      if (start_node) {
+        if (!local.pf.meta) {
+          local.pf.meta = { start: { position: { x: 0, y: 0 } } };
+        }
+        local.pf.meta.start.position = start_node.position;
+      }
+      loopPFNode(local.pf.main_nodes, ({ node }) => {
         const found = layoutedNodes.find((e) => e.id === node.id);
         if (found) {
           node.position = found.position;
@@ -89,6 +101,7 @@ export function Main() {
           return true;
         });
       }
+
       savePF();
     }
 
@@ -168,7 +181,7 @@ export function Main() {
           if (pf) {
             for (const c of changes) {
               if (c.type === "position") {
-                const node = pf.nodes.find((e) => e.id === c.id);
+                const node = pf.main_nodes.find((e) => e.id === c.id);
                 if (node) {
                   node.position = c.position;
                 }

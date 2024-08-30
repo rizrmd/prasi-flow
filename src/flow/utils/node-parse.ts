@@ -15,7 +15,7 @@ export const parseNodes = (
   let last = null as null | Node;
   let y = 0;
 
-  if (nodes.length === 0 && !existing) {
+  if (nodes.length === 0 && !existing && !is_spare) {
     const node = {
       id: "start",
       type: "input",

@@ -1,8 +1,11 @@
 export type PF = {
   name: string;
   path?: string;
-  nodes: PFNode[];
+  main_nodes: PFNode[];
   spare_nodes: PFNode[][];
+  meta?: {
+    start: { position: { x: number; y: number } };
+  };
 };
 
 export type PFSingleBranch = { code?: string; name?: string; nodes: PFNode[] };
@@ -13,6 +16,7 @@ export interface PFNode extends Record<string, any> {
   type: string;
   vars?: Record<string, any>;
   branches?: PFSingleBranch[];
+  position?: { x: number; y: number };
 }
 
 export type PFNodeDefinition = Record<string, any> & {

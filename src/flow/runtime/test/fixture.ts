@@ -5,7 +5,7 @@ export const sampleFlow = () => {
   const result = {
     name: "test",
     spare_nodes: [],
-    nodes: [
+    main_nodes: [
       createNode({
         name: "start",
         type: "code",
