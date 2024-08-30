@@ -23,6 +23,7 @@ export function Main() {
   const local = useLocal({
     pf: null as null | PF,
     reactflow: null as null | ReactFlowInstance<Node, Edge>,
+    save_timeout: null as any,
   });
 
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
@@ -30,7 +31,10 @@ export function Main() {
 
   // ini sementara save ke localStorage, nanti akan diganti save ke file di prasi
   const savePF = () => {
-    localStorage.setItem("pf-local", JSON.stringify(local.pf));
+    clearTimeout(local.save_timeout);
+    setTimeout(() => {
+      localStorage.setItem("pf-local", JSON.stringify(local.pf));
+    }, 200);
   };
 
   useEffect(() => {
@@ -164,6 +168,8 @@ export function Main() {
           if (pf) {
             for (const c of changes) {
               if (c.type === "position") {
+                pf.nodes[c.id].position = c.position;
+                savePF();
               }
             }
           }

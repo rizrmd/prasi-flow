@@ -22,17 +22,30 @@ export const sampleFlow: () => PF = () => {
       ],
     },
     [d]: { name: "d", type: "code", code: "code d" },
-    [e]: { name: "e", type: "code", code: "code e" },
+    [e]: {
+      name: "e",
+      type: "condition",
+      branches: [
+        {
+          name: "Branch 3",
+          flow: [j],
+        },
+        {
+          name: "Branch 4",
+          flow: [h],
+        },
+      ],
+    },
     [f]: { name: "f", type: "code", code: "code f" },
     [g]: { name: "g", type: "code", code: "code g" },
     [h]: { name: "h", type: "code", code: "code h" },
-    [i]: { name: "i", type: "code", code: "code i" },
+    [j]: { name: "j", type: "code", code: "code j" },
   });
 
   return {
     name: "test",
     nodes: nodes,
-    main_flow: [a, b, c, i],
+    main_flow: [a, b, c],
     spare_flow: {},
   };
 };
