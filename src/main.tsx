@@ -241,7 +241,7 @@ export function Main() {
             }
           }
         }}
-        onNodeClick={(_, node) => {
+        onNodeClick={(_) => {
           // const result = isMainNode({ id: node.id, nodes, edges });
           // node.sourcePosition =
           //   node.sourcePosition === Position.Right
