@@ -38,7 +38,15 @@ export const parseNodes = (
       data: {
         type: inode.type,
         label:
-          inode.type === "start" ? "Start" : `[${inode.type}] ${inode.name}`,
+          inode.type === "start" ? (
+            "Start"
+          ) : (
+            <>
+              [{inode.type}] {inode.name}
+              <br />
+              <small>{inode.id}</small>
+            </>
+          ),
       },
       position: inode.position || {
         x: (existing?.x || 0) * 200,

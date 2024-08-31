@@ -13,11 +13,11 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
-import { PF } from "./flow/runtime/types";
+import { PF, PFNodeID } from "./flow/runtime/types";
 import { findPFNode } from "./flow/utils/find-node";
 import { isMainPFNode } from "./flow/utils/is-main-node";
 import { getLayoutedElements } from "./flow/utils/node-utils";
-import { EdgeType, parseNodes } from "./flow/utils/parse-node";
+import { parseNodes } from "./flow/utils/parse-node";
 
 export function Main() {
   const local = useLocal({
@@ -209,7 +209,6 @@ export function Main() {
         nodes={nodes}
         edges={edges}
         onConnectEnd={(_, state) => {
-          console.log(state);
           if (state.isValid) {
             const from = state.fromNode;
             const to = state.toNode;
@@ -217,16 +216,54 @@ export function Main() {
               const found = edges.find((e) => {
                 return e.source === from.id && e.target === to.id;
               });
-              if (!found) {
-                setEdges([
-                  ...edges,
-                  {
-                    id: `${from.id}-${to.id}`,
-                    source: from.id,
-                    target: to.id,
-                    type: EdgeType,
-                  },
-                ]);
+              const pf = local.pf;
+              if (!found && pf) {
+                const node = pf.nodes[from.id];
+
+                const connectTo = (flow: PFNodeID[]) => {
+                  const idx = flow.findIndex((id) => id === from.id);
+                  const found = idx >= 0;
+
+                  if (found) {
+                    const last_flow = flow.slice(idx + 1);
+                    flow.splice(idx + 1, flow.length - idx - 1);
+
+                    if (last_flow[0] && !pf.spare_flow[last_flow[0]]) {
+                      pf.spare_flow[last_flow[0]] = last_flow;
+                    }
+                  }
+                  const spare = pf.spare_flow[to.id];
+                  if (spare) {
+                    delete pf.spare_flow[to.id];
+                    for (const id of spare) {
+                      flow.push(id);
+                    }
+                  } else {
+                    flow.push(to.id);
+                  }
+
+                  const parsed = parseNodes(pf.nodes, pf.main_flow);
+                  setNodes(parsed.nodes);
+                  setEdges(parsed.edges);
+                  savePF();
+                };
+
+                if (node) {
+                  if (node.branches) {
+                    const empty_branches = node.branches?.find(
+                      (e) => e.flow.length === 0
+                    );
+
+                    if (empty_branches) {
+                      connectTo(empty_branches.flow);
+                    }
+                  } else {
+                    const found = findPFNode({ id: node.id, pf });
+                    if (found) {
+                      connectTo(found.flow);
+                    }
+                  }
+                }
               }
             }
           }

@@ -2,7 +2,7 @@ import { Edge, Node } from "@xyflow/react";
 import dagre from "dagre";
 
 const nodeWidth = 172;
-const nodeHeight = 36;
+const nodeHeight = 64;
 
 export const getSize = (node: Node) => {
   if (node.data.type === "start") {
