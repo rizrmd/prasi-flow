@@ -29,5 +29,6 @@ export const isMainPFNode = ({
     visited.add(current_id);
     edge_found = edges.find((e) => e.target === current_id);
   }
+
   return false;
 };

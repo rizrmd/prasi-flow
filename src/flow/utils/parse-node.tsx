@@ -2,12 +2,10 @@ import { Edge, Node, Position } from "@xyflow/react";
 import { PFNode, PFNodeID } from "../runtime/types";
 
 export const EdgeType = "default";
-
 export const parseNodes = (
   nodes: Record<PFNodeID, PFNode>,
   flow: PFNodeID[],
   opt?: {
-    is_spare?: boolean;
     existing?: {
       rf_nodes: Node[];
       rf_edges: Edge[];
@@ -60,12 +58,24 @@ export const parseNodes = (
       let by = y;
       for (const branch of inode.branches) {
         if (branch.flow.length > 0) {
+          branch.flow = branch.flow.filter((id) => id !== inode.id);
+
+          const edge_id = `${node.id}-${branch.flow[0]}`;
+          if (rf_edges.find((e) => e.id === edge_id)) {
+            break;
+          }
+
+          if (node.id === branch.flow[0]) {
+            continue;
+          }
+
           rf_edges.push({
-            id: `${node.id}-${branch.flow[0]}`,
+            id: edge_id,
             source: node.id,
             target: branch.flow[0],
             type: EdgeType,
             label: branch.name,
+            animated: true,
           });
           parseNodes(nodes, branch.flow, {
             existing: {
@@ -81,11 +91,17 @@ export const parseNodes = (
     }
 
     if (prev) {
+      const edge_id = `${prev.id}-${node.id}`;
+      if (rf_edges.find((e) => e.id === edge_id)) {
+        throw new Error("waou");
+      }
+
       rf_edges.push({
-        id: `${prev.id}-${node.id}`,
+        id: edge_id,
         source: prev.id,
         type: EdgeType,
         target: node.id,
+        animated: true,
       });
     }
 

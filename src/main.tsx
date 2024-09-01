@@ -4,6 +4,7 @@ import {
   ControlButton,
   Controls,
   Edge,
+  getOutgoers,
   Node,
   ReactFlow,
   ReactFlowInstance,
@@ -14,16 +15,25 @@ import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
 import { PF, PFNodeID } from "./flow/runtime/types";
-import { findPFNode } from "./flow/utils/find-node";
+import { findPFNode, loopPFNode } from "./flow/utils/find-node";
 import { isMainPFNode } from "./flow/utils/is-main-node";
 import { getLayoutedElements } from "./flow/utils/node-utils";
-import { parseNodes } from "./flow/utils/parse-node";
+import { parseFlow } from "./flow/utils/parse-flow";
+import { RenderNode } from "./flow/render-node";
+import { RenderEdge } from "./flow/render-edge";
+import { fg } from "./flow/utils/flow-global";
 
 export function Main() {
   const local = useLocal({
     pf: null as null | PF,
     reactflow: null as null | ReactFlowInstance<Node, Edge>,
     save_timeout: null as any,
+    nodeTypes: {
+      default: RenderNode,
+    },
+    edgeTypes: {
+      default: RenderEdge,
+    },
   });
 
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
@@ -47,18 +57,10 @@ export function Main() {
       pf = sampleFlow();
       relayout = true;
     }
+
     if (pf) {
       local.pf = pf;
-      const parsed = parseNodes(pf.nodes, pf.main_flow);
-
-      const spare_flows = Object.values(pf.spare_flow);
-      if (spare_flows.length > 0) {
-        for (const flow of spare_flows) {
-          const spare = parseNodes(pf.nodes, flow);
-          parsed.nodes = [...parsed.nodes, ...spare.nodes];
-          parsed.edges = [...parsed.edges, ...spare.edges];
-        }
-      }
+      const parsed = parseFlow(pf);
 
       if (relayout) {
         relayoutNodes({ nodes: parsed.nodes, edges: parsed.edges });
@@ -100,6 +102,34 @@ export function Main() {
     }
   };
 
+  const connectTo = (pf: PF, from: string, to: string, flow: PFNodeID[]) => {
+    const idx = flow.findIndex((id) => id === from);
+    const found = idx >= 0;
+
+    if (found) {
+      const last_flow = flow.slice(idx + 1);
+      flow.splice(idx + 1, flow.length - idx - 1);
+
+      if (last_flow[0] && !pf.spare_flow[last_flow[0]]) {
+        pf.spare_flow[last_flow[0]] = last_flow;
+      }
+    }
+    const spare = pf.spare_flow[to];
+    if (spare) {
+      delete pf.spare_flow[to];
+      for (const id of spare) {
+        flow.push(id);
+      }
+    } else {
+      flow.push(to);
+    }
+
+    const parsed = parseFlow(pf);
+    setNodes(parsed.nodes);
+    setEdges(parsed.edges);
+    savePF();
+  };
+
   return (
     <div
       className={cx(
@@ -123,14 +153,14 @@ export function Main() {
               background-color: #edffed;
             }
 
-            &:hover {
-              background-color: #e8f3ff;
-            }
             &.selected {
               outline: 1px solid blue;
               border: 1px solid blue;
               background-color: #e8f3ff;
             }
+          }
+          .react-flow__node-default {
+            padding: 0;
           }
 
           .react-flow__edge {
@@ -163,6 +193,9 @@ export function Main() {
         onInit={(ref) => {
           local.reactflow = ref;
         }}
+        connectionRadius={100}
+        nodeTypes={local.nodeTypes}
+        edgeTypes={local.edgeTypes}
         onNodesChange={(changes) => {
           const pf = local.pf;
           if (pf) {
@@ -174,6 +207,25 @@ export function Main() {
             }
           }
           return onNodesChange(changes);
+        }}
+        isValidConnection={(connection) => {
+          const target = nodes.find((node) => node.id === connection.target);
+          const hasCycle = (node: Node, visited = new Set()) => {
+            if (visited.has(node.id)) return false;
+
+            visited.add(node.id);
+
+            for (const outgoer of getOutgoers(node, nodes, edges)) {
+              if (outgoer.id === connection.source) return true;
+              if (hasCycle(outgoer, visited)) return true;
+            }
+          };
+
+          if (target) {
+            if (target.id === connection.source) return false;
+            return !hasCycle(target);
+          }
+          return true;
         }}
         onEdgesChange={(changes) => {
           const pf = local.pf;
@@ -192,11 +244,35 @@ export function Main() {
                         found.flow.length - found.idx
                       );
 
-                      if (spare_flow.length > 0) {
+                      if (spare_flow.length > 1) {
                         pf.spare_flow[spare_flow[0]] = spare_flow;
                       }
 
                       savePF();
+                    }
+                  } else {
+                    for (const spare of Object.values(pf.spare_flow)) {
+                      let should_break = false;
+                      loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
+                        if (flow.includes(edge.target)) {
+                          should_break = true;
+
+                          const spare_flow = flow.splice(
+                            idx,
+                            flow.length - idx
+                          );
+
+                          if (spare_flow.length > 1) {
+                            pf.spare_flow[spare_flow[0]] = spare_flow;
+                          }
+
+                          return false;
+                        }
+                        return true;
+                      });
+                      if (should_break) {
+                        break;
+                      }
                     }
                   }
                 }
@@ -209,76 +285,73 @@ export function Main() {
         nodes={nodes}
         edges={edges}
         onConnectEnd={(_, state) => {
+          let from_id = "";
+          let to_id = "";
+          const from = state.fromNode;
+          if (from) from_id = from.id;
+
           if (state.isValid) {
-            const from = state.fromNode;
             const to = state.toNode;
-            if (from && to) {
-              const found = edges.find((e) => {
-                return e.source === from.id && e.target === to.id;
+            if (to) to_id = to.id;
+          } else if (fg.pointer_up_id) {
+            to_id = fg.pointer_up_id;
+            fg.pointer_up_id = "";
+          }
+
+          if (from_id && to_id) {
+            if (from_id === to_id) return;
+
+            const found = edges.find((e) => {
+              return e.source === from_id && e.target === to_id;
+            });
+
+            const pf = local.pf;
+
+            if (!found && pf) {
+              const from_node = pf.nodes[from_id];
+              const to_node = pf.nodes[to_id];
+              const is_from_main = isMainPFNode({
+                id: from_node.id,
+                nodes: pf.nodes,
+                edges,
               });
-              const pf = local.pf;
-              if (!found && pf) {
-                const node = pf.nodes[from.id];
+              const is_to_main = isMainPFNode({
+                id: to_node.id,
+                nodes: pf.nodes,
+                edges,
+              });
 
-                const connectTo = (flow: PFNodeID[]) => {
-                  const idx = flow.findIndex((id) => id === from.id);
-                  const found = idx >= 0;
+              // if (
+              //   (is_from_main && is_to_main) ||
+              //   (!is_from_main && !is_to_main) ||
+              //   (is_from_main && !is_to_main)
+              // ) {
+              if (from_node) {
+                if (from_node.branches) {
+                  let picked_branches = from_node.branches?.find(
+                    (e) => e.flow.length === 0
+                  );
 
+                  if (!picked_branches) {
+                    const spare = from_node.branches[0].flow;
+                    from_node.branches[0].flow = [];
+                    pf.spare_flow[spare[0]] = spare;
+                    picked_branches = from_node.branches[0];
+                  }
+
+                  if (picked_branches) {
+                    connectTo(pf, from_id, to_id, picked_branches.flow);
+                  }
+                } else {
+                  const found = findPFNode({ id: from_node.id, pf });
                   if (found) {
-                    const last_flow = flow.slice(idx + 1);
-                    flow.splice(idx + 1, flow.length - idx - 1);
-
-                    if (last_flow[0] && !pf.spare_flow[last_flow[0]]) {
-                      pf.spare_flow[last_flow[0]] = last_flow;
-                    }
-                  }
-                  const spare = pf.spare_flow[to.id];
-                  if (spare) {
-                    delete pf.spare_flow[to.id];
-                    for (const id of spare) {
-                      flow.push(id);
-                    }
-                  } else {
-                    flow.push(to.id);
-                  }
-
-                  const parsed = parseNodes(pf.nodes, pf.main_flow);
-                  setNodes(parsed.nodes);
-                  setEdges(parsed.edges);
-                  savePF();
-                };
-
-                if (node) {
-                  if (node.branches) {
-                    const empty_branches = node.branches?.find(
-                      (e) => e.flow.length === 0
-                    );
-
-                    if (empty_branches) {
-                      connectTo(empty_branches.flow);
-                    }
-                  } else {
-                    const found = findPFNode({ id: node.id, pf });
-                    if (found) {
-                      connectTo(found.flow);
-                    }
+                    connectTo(pf, from_id, to_id, found.flow);
                   }
                 }
               }
+              // }
             }
           }
-        }}
-        onNodeClick={(_) => {
-          // const result = isMainNode({ id: node.id, nodes, edges });
-          // node.sourcePosition =
-          //   node.sourcePosition === Position.Right
-          //     ? Position.Bottom
-          //     : Position.Right;
-          // node.targetPosition =
-          //   node.targetPosition === Position.Top ? Position.Left : Position.Top;
-          // const idx = nodes.findIndex((e) => e.id === node.id);
-          // nodes.splice(idx, 1, node);
-          // setNodes([...nodes]);
         }}
       >
         <Background />

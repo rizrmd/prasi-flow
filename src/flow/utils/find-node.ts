@@ -17,7 +17,8 @@ export const findPFNode = ({ id, pf }: { id: string; pf: PF }) => {
 export const loopPFNode = (
   nodes: Record<string, PFNode>,
   flow: PFNodeID[],
-  fn: (arg: { flow: PFNodeID[]; idx: number }) => boolean
+  fn: (arg: { flow: PFNodeID[]; idx: number }) => boolean,
+  visited = new Set<string>()
 ) => {
   let idx = 0;
   for (const id of flow) {
@@ -25,6 +26,12 @@ export const loopPFNode = (
       return false;
     }
     const node = nodes[id];
+    if (visited.has(node.id)) {
+      continue;
+    } else {
+      visited.add(node.id);
+    }
+
     if (node && node.branches) {
       for (const branch of node.branches) {
         if (branch.flow.length > 0) {
