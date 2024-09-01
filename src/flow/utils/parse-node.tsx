@@ -19,18 +19,28 @@ export const parseNodes = (
   const rf_nodes: Node[] = existing ? existing.rf_nodes : [];
   const rf_edges: Edge[] = existing ? existing.rf_edges : [];
 
-  const flow_nodes = [
-    ...flow.map((id) => nodes[id]),
-    ...(existing?.next_flow || []),
-  ];
+  const flow_mapped: PFNode[] = [];
+  for (let i = 0; i < flow.length; i++) {
+    const id = flow[i];
+
+    if (!nodes[id]) {
+      flow.splice(i, flow.length - 1);
+      break;
+    } else {
+      flow_mapped.push(nodes[id]);
+    }
+  }
+
+  const flow_nodes = [...flow_mapped, ...(existing?.next_flow || [])];
   let prev = null as null | Node;
   let y = 0;
 
   for (const inode of flow_nodes) {
-    const node = {
+    const node: Node = {
       id: inode.id,
       type: inode.type === "start" ? "input" : "default",
       className: inode.type,
+      deletable: inode.type !== "start",
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
       data: {
@@ -93,16 +103,15 @@ export const parseNodes = (
     if (prev) {
       const edge_id = `${prev.id}-${node.id}`;
       if (rf_edges.find((e) => e.id === edge_id)) {
-        throw new Error("waou");
+      } else {
+        rf_edges.push({
+          id: edge_id,
+          source: prev.id,
+          type: EdgeType,
+          target: node.id,
+          animated: true,
+        });
       }
-
-      rf_edges.push({
-        id: edge_id,
-        source: prev.id,
-        type: EdgeType,
-        target: node.id,
-        animated: true,
-      });
     }
 
     prev = node;

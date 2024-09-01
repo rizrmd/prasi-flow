@@ -1,3 +1,4 @@
+import { createId } from "@paralleldrive/cuid2";
 import {
   BaseEdge,
   EdgeComponentProps,
@@ -5,7 +6,10 @@ import {
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
+import { PFNode } from "./runtime/types";
 import { fg } from "./utils/flow-global";
+import { findFlow } from "./utils/find-node";
+import { savePF } from "./utils/save-pf";
 
 export const RenderEdge = ({
   id,
@@ -19,6 +23,7 @@ export const RenderEdge = ({
   label,
   markerEnd,
 }: EdgeComponentProps) => {
+  const { getEdge, setEdges } = useReactFlow();
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -27,6 +32,7 @@ export const RenderEdge = ({
     targetY,
     targetPosition,
   });
+
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
@@ -70,8 +76,37 @@ export const RenderEdge = ({
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
+            if (id) {
+              const edge = getEdge(id);
+              const pf = fg.pf;
+              if (edge && pf) {
+                const node = pf.nodes[edge.source];
+                let from = null as null | { flow: string[]; idx: number };
+                if ((node.branches || []).length > 0) {
+                  for (const branch of node.branches!) {
+                    const idx = branch.flow.findIndex((e) => e === edge.target);
+                    if (idx >= 0) {
+                      from = { flow: branch.flow, idx: idx - 1 };
+                      break;
+                    }
+                  }
+                } else {
+                  from = findFlow({ id: edge.source, pf });
+                }
 
-            // setEdges((edges) => edges.filter((edge) => edge.id !== id));
+                if (from) {
+                  const pf_node: PFNode = {
+                    id: createId(),
+                    type: "dummy",
+                  };
+                  pf.nodes[pf_node.id] = pf_node;
+                  from.flow.splice(from.idx + 1, 0, pf_node.id);
+                  savePF(pf);
+
+                  fg.reload();
+                }
+              }
+            }
           }}
         >
           <div className={"label"}>{label}</div>

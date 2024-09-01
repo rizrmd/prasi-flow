@@ -1,6 +1,6 @@
 import { PF, PFNode, PFNodeID } from "../runtime/types";
 
-export const findPFNode = ({ id, pf }: { id: string; pf: PF }) => {
+export const findFlow = ({ id, pf }: { id: string; pf: PF }) => {
   let result = { flow: [] as PFNodeID[], idx: -1 };
   loopPFNode(pf.nodes, pf.main_flow, ({ flow, idx }) => {
     if (flow[idx] === id) {
@@ -26,6 +26,10 @@ export const loopPFNode = (
       return false;
     }
     const node = nodes[id];
+    if (!node) {
+      console.log(id, nodes);
+      continue;
+    }
     if (visited.has(node.id)) {
       continue;
     } else {

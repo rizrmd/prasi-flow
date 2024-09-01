@@ -15,13 +15,16 @@ import "@xyflow/react/dist/style.css";
 import { useEffect } from "react";
 import { sampleFlow } from "./flow/runtime/test/fixture";
 import { PF, PFNodeID } from "./flow/runtime/types";
-import { findPFNode, loopPFNode } from "./flow/utils/find-node";
+import { findFlow, loopPFNode } from "./flow/utils/find-node";
 import { isMainPFNode } from "./flow/utils/is-main-node";
-import { getLayoutedElements } from "./flow/utils/node-utils";
+import { getLayoutedElements } from "./flow/utils/node-layout";
 import { parseFlow } from "./flow/utils/parse-flow";
 import { RenderNode } from "./flow/render-node";
 import { RenderEdge } from "./flow/render-edge";
 import { fg } from "./flow/utils/flow-global";
+import { savePF } from "./flow/utils/save-pf";
+import { MagnetIcon, Sparkles, Wand, WandSparkles } from "lucide-react";
+import { createId } from "@paralleldrive/cuid2";
 
 export function Main() {
   const local = useLocal({
@@ -38,14 +41,6 @@ export function Main() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
-
-  // ini sementara save ke localStorage, nanti akan diganti save ke file di prasi
-  const savePF = () => {
-    clearTimeout(local.save_timeout);
-    setTimeout(() => {
-      localStorage.setItem("pf-local", JSON.stringify(local.pf));
-    }, 200);
-  };
 
   useEffect(() => {
     const temp = localStorage.getItem("pf-local");
@@ -69,7 +64,7 @@ export function Main() {
         setEdges(parsed.edges);
       }
 
-      savePF();
+      savePF(local.pf);
     }
   }, []);
 
@@ -91,7 +86,7 @@ export function Main() {
         }
       }
 
-      savePF();
+      savePF(local.pf);
     }
 
     const ref = local.reactflow;
@@ -99,6 +94,19 @@ export function Main() {
       setTimeout(() => {
         ref.fitView();
       });
+    }
+  };
+
+  fg.reload = (relayout?: boolean) => {
+    if (fg.pf) {
+      const parsed = parseFlow(fg.pf);
+
+      if (relayout) {
+        relayoutNodes(parsed);
+      } else {
+        setNodes(parsed.nodes);
+        setEdges(parsed.edges);
+      }
     }
   };
 
@@ -127,9 +135,10 @@ export function Main() {
     const parsed = parseFlow(pf);
     setNodes(parsed.nodes);
     setEdges(parsed.edges);
-    savePF();
+    savePF(local.pf);
   };
 
+  fg.pf = local.pf;
   return (
     <div
       className={cx(
@@ -193,7 +202,6 @@ export function Main() {
         onInit={(ref) => {
           local.reactflow = ref;
         }}
-        connectionRadius={100}
         nodeTypes={local.nodeTypes}
         edgeTypes={local.edgeTypes}
         onNodesChange={(changes) => {
@@ -202,7 +210,10 @@ export function Main() {
             for (const c of changes) {
               if (c.type === "position") {
                 pf.nodes[c.id].position = c.position;
-                savePF();
+                savePF(local.pf);
+              } else if (c.type === "remove") {
+                delete pf.nodes[c.id];
+                savePF(pf);
               }
             }
           }
@@ -230,48 +241,76 @@ export function Main() {
         onEdgesChange={(changes) => {
           const pf = local.pf;
           if (pf) {
-            for (const c of changes) {
-              if (c.type === "remove") {
-                const edge = edges.find((e) => e.id === c.id);
-                if (edge) {
-                  if (
-                    isMainPFNode({ id: edge.target, nodes: pf.nodes, edges })
-                  ) {
-                    const found = findPFNode({ id: edge.target, pf });
-                    if (found) {
-                      const spare_flow = found.flow.splice(
-                        found.idx,
-                        found.flow.length - found.idx
-                      );
+            if (
+              changes.length === 2 &&
+              changes[0].type === "remove" &&
+              changes[1].type === "remove"
+            ) {
+              const from = changes[0];
+              const to = changes[1];
 
-                      if (spare_flow.length > 1) {
-                        pf.spare_flow[spare_flow[0]] = spare_flow;
-                      }
+              const from_edge = edges.find((e) => from.id === e.id);
+              const to_edge = edges.find((e) => to.id === e.id);
 
-                      savePF();
-                    }
-                  } else {
-                    for (const spare of Object.values(pf.spare_flow)) {
-                      let should_break = false;
-                      loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
-                        if (flow.includes(edge.target)) {
-                          should_break = true;
+              if (from_edge && to_edge) {
+                const from_node = pf.nodes[from_edge.source];
+                if (from_node.branches) {
+                } else {
+                  setEdges([
+                    ...edges,
+                    {
+                      id: `${from_edge.source}-${to_edge.target}`,
+                      source: from_edge.source,
+                      target: to_edge.target,
+                      animated: true,
+                    },
+                  ]);
+                }
+              }
+            } else {
+              for (const c of changes) {
+                if (c.type === "remove") {
+                  const edge = edges.find((e) => e.id === c.id);
+                  if (edge) {
+                    if (
+                      isMainPFNode({ id: edge.target, nodes: pf.nodes, edges })
+                    ) {
+                      const found = findFlow({ id: edge.target, pf });
+                      if (found) {
+                        const spare_flow = found.flow.splice(
+                          found.idx,
+                          found.flow.length - found.idx
+                        );
 
-                          const spare_flow = flow.splice(
-                            idx,
-                            flow.length - idx
-                          );
-
-                          if (spare_flow.length > 1) {
-                            pf.spare_flow[spare_flow[0]] = spare_flow;
-                          }
-
-                          return false;
+                        if (spare_flow.length > 1) {
+                          pf.spare_flow[spare_flow[0]] = spare_flow;
                         }
-                        return true;
-                      });
-                      if (should_break) {
-                        break;
+
+                        savePF(local.pf);
+                      }
+                    } else {
+                      for (const spare of Object.values(pf.spare_flow)) {
+                        let should_break = false;
+                        loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
+                          if (flow.includes(edge.target)) {
+                            should_break = true;
+
+                            const spare_flow = flow.splice(
+                              idx,
+                              flow.length - idx
+                            );
+
+                            if (spare_flow.length > 1) {
+                              pf.spare_flow[spare_flow[0]] = spare_flow;
+                            }
+
+                            return false;
+                          }
+                          return true;
+                        });
+                        if (should_break) {
+                          break;
+                        }
                       }
                     }
                   }
@@ -293,9 +332,32 @@ export function Main() {
           if (state.isValid) {
             const to = state.toNode;
             if (to) to_id = to.id;
-          } else if (fg.pointer_up_id) {
-            to_id = fg.pointer_up_id;
-            fg.pointer_up_id = "";
+          } else {
+            if (fg.pointer_up_id) {
+              to_id = fg.pointer_up_id;
+              fg.pointer_up_id = "";
+            } else {
+              const found = edges.find((e) => e.source === from_id);
+              if (!found && local.pf) {
+                const f = findFlow({ id: from_id, pf: local.pf });
+                if (f.idx >= 0 && from) {
+                  const position = fg.pointer_to || {
+                    x: from.position.x,
+                    y: from.position.y + 100,
+                  };
+                  fg.pointer_to = null;
+                  const dummy = {
+                    type: "dummy",
+                    id: createId(),
+                    position,
+                  };
+                  local.pf.nodes[dummy.id] = dummy;
+                  f.flow.push(dummy.id);
+                  fg.reload();
+                  return;
+                }
+              }
+            }
           }
 
           if (from_id && to_id) {
@@ -309,23 +371,18 @@ export function Main() {
 
             if (!found && pf) {
               const from_node = pf.nodes[from_id];
-              const to_node = pf.nodes[to_id];
-              const is_from_main = isMainPFNode({
-                id: from_node.id,
-                nodes: pf.nodes,
-                edges,
-              });
-              const is_to_main = isMainPFNode({
-                id: to_node.id,
-                nodes: pf.nodes,
-                edges,
-              });
+              // const to_node = pf.nodes[to_id];
+              // const is_from_main = isMainPFNode({
+              //   id: from_node.id,
+              //   nodes: pf.nodes,
+              //   edges,
+              // });
+              // const is_to_main = isMainPFNode({
+              //   id: to_node.id,
+              //   nodes: pf.nodes,
+              //   edges,
+              // });
 
-              // if (
-              //   (is_from_main && is_to_main) ||
-              //   (!is_from_main && !is_to_main) ||
-              //   (is_from_main && !is_to_main)
-              // ) {
               if (from_node) {
                 if (from_node.branches) {
                   let picked_branches = from_node.branches?.find(
@@ -343,21 +400,21 @@ export function Main() {
                     connectTo(pf, from_id, to_id, picked_branches.flow);
                   }
                 } else {
-                  const found = findPFNode({ id: from_node.id, pf });
+                  const found = findFlow({ id: from_node.id, pf });
                   if (found) {
                     connectTo(pf, from_id, to_id, found.flow);
                   }
                 }
+                fg.reload();
               }
-              // }
             }
           }
         }}
       >
         <Background />
-        <Controls position="top-left">
-          <ControlButton onClick={() => relayoutNodes()}>
-            <MagicWandIcon />
+        <Controls position="top-left" showInteractive={false}>
+          <ControlButton onClick={() => relayoutNodes()} title="auto layout">
+            <Sparkles />
           </ControlButton>
         </Controls>
       </ReactFlow>

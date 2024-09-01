@@ -12,6 +12,10 @@ export const RenderNode = (arg: { id: string; data: { label: string } }) => {
     reset: actions.resetSelectedElements,
   }));
 
+  if (connection.inProgress) {
+    fg.pointer_to = connection.to;
+  }
+
   return (
     <div
       className={cx(
