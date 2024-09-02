@@ -1,6 +1,6 @@
 import { Handle, Position, useConnection, useStore, Node } from "@xyflow/react";
 import { MoveIcon } from "lucide-react";
-import { fg } from "./utils/flow-global";
+import { fg } from "./flow-global";
 
 export const RenderNode = (arg: { id: string; data: { label: string } }) => {
   const { data, id } = arg;

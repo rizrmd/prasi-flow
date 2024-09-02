@@ -6,10 +6,10 @@ import {
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
-import { PFNode } from "./runtime/types";
-import { fg } from "./utils/flow-global";
-import { findFlow } from "./utils/find-node";
-import { savePF } from "./utils/save-pf";
+import { PFNode } from "../runtime/types";
+import { fg } from "./flow-global";
+import { findFlow } from "./find-node";
+import { savePF } from "./save-pf";
 
 export const RenderEdge = ({
   id,
