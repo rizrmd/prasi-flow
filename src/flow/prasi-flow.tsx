@@ -274,7 +274,11 @@ export function PrasiFlow() {
                     if (
                       isMainPFNode({ id: edge.target, nodes: pf.nodes, edges })
                     ) {
-                      const found = findFlow({ id: edge.target, pf });
+                      const found = findFlow({
+                        id: edge.target,
+                        pf,
+                        from: edge.source,
+                      });
                       if (found) {
                         const spare_flow = found.flow.splice(
                           found.idx,
@@ -286,6 +290,7 @@ export function PrasiFlow() {
                         }
 
                         savePF(local.pf);
+                        fg.reload();
                       }
                     } else {
                       for (const spare of Object.values(pf.spare_flow)) {
