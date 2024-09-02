@@ -23,7 +23,7 @@ export const RenderEdge = ({
   label,
   markerEnd,
 }: EdgeComponentProps) => {
-  const { getEdge, setEdges } = useReactFlow();
+  const { getEdge } = useReactFlow();
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -97,7 +97,7 @@ export const RenderEdge = ({
                 if (from) {
                   const pf_node: PFNode = {
                     id: createId(),
-                    type: "dummy",
+                    type: "code",
                   };
                   pf.nodes[pf_node.id] = pf_node;
                   from.flow.splice(from.idx + 1, 0, pf_node.id);

@@ -39,6 +39,7 @@ export const sampleFlow: () => PF = () => {
     [f]: { name: "f", type: "code", code: "code f" },
     [g]: { name: "g", type: "code", code: "code g" },
     [h]: { name: "h", type: "code", code: "code h" },
+    [i]: { name: "i", type: "code", code: "code i" },
     [j]: { name: "j", type: "code", code: "code j" },
   });
 

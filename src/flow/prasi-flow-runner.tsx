@@ -1,5 +1,5 @@
 import { Tooltip } from "@/components/ui/tooltip";
-import { BugPlay, Play, StepForward } from "lucide-react";
+import { BugPlay, Play } from "lucide-react";
 import { fg } from "./utils/flow-global";
 
 export const PrasiFlowRunner = () => {
@@ -45,7 +45,7 @@ export const PrasiFlowRunner = () => {
           {fg.log.length === 0 ? (
             <div className="text-slate-400">Flow Log...</div>
           ) : (
-            fg.log.map((e) => {
+            fg.log.map((_) => {
               return "";
             })
           )}

@@ -350,13 +350,13 @@ export function PrasiFlow() {
                     y: from.position.y + 100,
                   };
                   fg.pointer_to = null;
-                  const dummy = {
-                    type: "dummy",
+                  const dummyCode = {
+                    type: "code",
                     id: createId(),
                     position,
                   };
-                  local.pf.nodes[dummy.id] = dummy;
-                  f.flow.push(dummy.id);
+                  local.pf.nodes[dummyCode.id] = dummyCode;
+                  f.flow.push(dummyCode.id);
                   fg.reload();
                   return;
                 }
