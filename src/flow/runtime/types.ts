@@ -8,27 +8,30 @@ export type PF = {
   spare_flow: Record<string, PFNodeID[]>;
 };
 
-export type PFSingleLog = {};
+export type PFNodeLog = {
+  nodeId: string;
+  log: string;
+};
 
-export type PFSingleBranch = { code?: string; name?: string; flow: PFNodeID[] };
+export type PFNodeBranch = { code?: string; name?: string; flow: PFNodeID[] };
 
 export interface PFNode extends Record<string, any> {
   id: string;
   name?: string;
   type: string;
   vars?: Record<string, any>;
-  branches?: PFSingleBranch[];
+  branches?: PFNodeBranch[];
   position?: { x: number; y: number };
 }
 
 export type PFNodeDefinition = Record<string, any> & {
   type: string;
   vars?: Record<string, any>;
-  branches?: PFSingleBranch[];
+  branches?: PFNodeBranch[];
   process: (arg: {
     vars: Record<string, any>;
     node: PFNodeRuntime;
-    nextBranch: (branch?: PFSingleBranch) => void;
+    nextBranch: (branch?: PFNodeBranch) => void;
     next: () => void;
   }) => void | Promise<void>;
   fields?: Record<
@@ -48,7 +51,7 @@ export interface PFNodeRuntime {
   current: PFNode;
   prev?: PFNode;
   first: PFNode;
-  visited: { node: PFNode; branch?: PFSingleBranch }[];
+  visited: { node: PFNode; branch?: PFNodeBranch }[];
 }
 
 export type PFRuntime = {

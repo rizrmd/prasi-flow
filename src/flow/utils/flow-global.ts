@@ -1,11 +1,11 @@
-import { PF, PFSingleLog } from "../runtime/types";
+import { PF, PFNodeLog } from "../runtime/types";
 
 const fg_default = {
   pf: null as null | PF,
   pointer_up_id: "",
   pointer_to: null as null | { x: number; y: number },
   reload: (relayout?: boolean) => {},
-  log: [] as PFSingleLog[],
+  log: [] as PFNodeLog[],
 };
 const w = window as unknown as {
   prasi_flow_global: typeof fg_default;

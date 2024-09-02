@@ -1,4 +1,4 @@
-import { PF, PFNode, PFNodeID, PFSingleBranch } from "../runtime/types";
+import { PF, PFNode, PFNodeID, PFNodeBranch } from "../runtime/types";
 
 export const findFlow = ({
   id,
@@ -12,7 +12,7 @@ export const findFlow = ({
   let result = {
     flow: [] as PFNodeID[],
     idx: -1,
-    branch: undefined as void | PFSingleBranch,
+    branch: undefined as void | PFNodeBranch,
   };
   loopPFNode(pf.nodes, pf.main_flow, ({ flow, idx, parent, branch }) => {
     if (flow[idx] === id) {
@@ -40,10 +40,10 @@ export const loopPFNode = (
     flow: PFNodeID[];
     idx: number;
     parent?: PFNode;
-    branch?: PFSingleBranch;
+    branch?: PFNodeBranch;
   }) => boolean,
   visited = new Set<string>(),
-  arg?: { parent: PFNode; branch?: PFSingleBranch }
+  arg?: { parent: PFNode; branch?: PFNodeBranch }
 ) => {
   let idx = 0;
   for (const id of flow) {

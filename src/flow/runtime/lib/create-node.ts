@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { allNodeDefinitions, PRASI_NODE_DEFS } from "../nodes";
-import { PFNode, PFNodeID, PFSingleBranch } from "../types";
+import { PFNode, PFNodeID, PFNodeBranch } from "../types";
 
 type NODE_TYPES = keyof PRASI_NODE_DEFS;
 
@@ -10,7 +10,7 @@ export const createNode = <T extends keyof PRASI_NODE_DEFS>(
     name?: string;
     type: T;
     vars?: Record<string, any>;
-    branches?: PFSingleBranch[];
+    branches?: PFNodeBranch[];
   }
 ) => {
   const definition = allNodeDefinitions[create.type];
@@ -34,7 +34,7 @@ export const createManyNodes = (
       name?: string;
       type: NODE_TYPES;
       vars?: Record<string, any>;
-      branches?: PFSingleBranch[];
+      branches?: PFNodeBranch[];
     } & Record<string, any>
   >
 ) => {

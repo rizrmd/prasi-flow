@@ -4,7 +4,7 @@ import {
   PFNode,
   PFNodeDefinition,
   PFRuntime,
-  PFSingleBranch,
+  PFNodeBranch,
 } from "./types";
 
 export const runFlow = async (pf: PF, vars?: Record<string, any>) => {
@@ -19,7 +19,7 @@ const flowRuntime = async (
   runtime: PFRuntime,
   defaultVars?: Record<string, any>
 ) => {
-  const visited: { node: PFNode; branch?: PFSingleBranch }[] = [];
+  const visited: { node: PFNode; branch?: PFNodeBranch }[] = [];
   const vars = { ...defaultVars };
   for (const current of runtime.nodes) {
     await runSingleNode({ pf, current, visited, vars });
@@ -30,8 +30,8 @@ const flowRuntime = async (
 const runSingleNode = async (opt: {
   pf: PF;
   current: PFNode;
-  branch?: PFSingleBranch;
-  visited: { node: PFNode; branch?: PFSingleBranch }[];
+  branch?: PFNodeBranch;
+  visited: { node: PFNode; branch?: PFNodeBranch }[];
   vars: Record<string, any>;
 }) => {
   const { pf, visited, vars, current, branch } = opt;
@@ -43,7 +43,7 @@ const runSingleNode = async (opt: {
     }
   }
 
-  const next_branch = await new Promise<PFSingleBranch | void>(
+  const next_branch = await new Promise<PFNodeBranch | void>(
     async (resolve) => {
       def.process({
         vars,
