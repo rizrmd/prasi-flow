@@ -4,6 +4,7 @@ const fg_default = {
   pf: null as null | PF,
   pointer_up_id: "",
   pointer_to: null as null | { x: number; y: number },
+  // @ts-ignore
   reload: (relayout?: boolean) => {},
   log: [] as PFNodeLog[],
 };
