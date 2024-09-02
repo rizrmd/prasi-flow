@@ -17,7 +17,7 @@ import { useEffect } from "react";
 import { RenderEdge } from "./utils/render-edge";
 import { RenderNode } from "./utils/render-node";
 import { sampleFlow } from "./runtime/test/fixture";
-import { PF, PFNodeID } from "./runtime/types";
+import { PF, PFNodeID, PFNodeType } from "./runtime/types";
 import { findFlow, loopPFNode } from "./utils/find-node";
 import { fg } from "./utils/flow-global";
 import { isMainPFNode } from "./utils/is-main-node";
@@ -351,7 +351,7 @@ export function PrasiFlow() {
                   };
                   fg.pointer_to = null;
                   const dummyCode = {
-                    type: "code",
+                    type: PFNodeType.CODE,
                     id: createId(),
                     position,
                   };

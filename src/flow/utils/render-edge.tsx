@@ -6,7 +6,7 @@ import {
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
-import { PFNode } from "../runtime/types";
+import {PFNode, PFNodeType} from "../runtime/types";
 import { fg } from "./flow-global";
 import { findFlow } from "./find-node";
 import { savePF } from "./save-pf";
@@ -97,7 +97,7 @@ export const RenderEdge = ({
                 if (from) {
                   const pf_node: PFNode = {
                     id: createId(),
-                    type: "code",
+                    type: PFNodeType.CODE,
                   };
                   pf.nodes[pf_node.id] = pf_node;
                   from.flow.splice(from.idx + 1, 0, pf_node.id);
