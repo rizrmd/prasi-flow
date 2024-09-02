@@ -8,6 +8,8 @@ export type PF = {
   spare_flow: Record<string, PFNodeID[]>;
 };
 
+export type PFSingleLog = {};
+
 export type PFSingleBranch = { code?: string; name?: string; flow: PFNodeID[] };
 
 export interface PFNode extends Record<string, any> {

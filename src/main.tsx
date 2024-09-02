@@ -1,5 +1,6 @@
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { PrasiFlow } from "./flow/prasi-flow";
+import { PrasiFlowRunner } from "./flow/prasi-flow-runner";
 
 export const Main = () => {
   return (
@@ -9,9 +10,10 @@ export const Main = () => {
           <PrasiFlow />
         </Panel>
         <PanelResizeHandle className={"border-t"} />
-        <Panel defaultSize={25}></Panel>
+        <Panel defaultSize={25}>
+          <PrasiFlowRunner />
+        </Panel>
       </PanelGroup>
-      ;
     </div>
   );
 };
