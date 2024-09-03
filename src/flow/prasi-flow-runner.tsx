@@ -42,10 +42,10 @@ export const PrasiFlowRunner = () => {
       </div>
       <div className="flex-1 relative overflow-auto">
         <div className="absolute inset-0 font-mono text-xs p-2">
-          {fg.log.length === 0 ? (
+          {fg.runner.log.length === 0 ? (
             <div className="text-slate-400">Flow Log...</div>
           ) : (
-            fg.log.map((_) => {
+            fg.runner.log.map((e) => {
               return "";
             })
           )}

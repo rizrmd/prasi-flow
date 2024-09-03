@@ -6,7 +6,9 @@ const fg_default = {
   pointer_to: null as null | { x: number; y: number },
   // @ts-ignore
   reload: (relayout?: boolean) => {},
-  log: [] as PFNodeLog[],
+  runner: {
+    log: [] as PFNodeLog[],
+  },
 };
 const w = window as unknown as {
   prasi_flow_global: typeof fg_default;

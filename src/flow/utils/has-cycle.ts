@@ -15,7 +15,6 @@ export const hasCycle = (
 
   for (const outgoer of outgoers) {
     if (hasCycle(nodes, edges, visited, outgoer)) {
-      console.log(outgoer);
       return true;
     }
   }
