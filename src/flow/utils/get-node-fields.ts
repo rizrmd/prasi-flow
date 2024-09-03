@@ -6,8 +6,10 @@ export const getNodeFields = (node: PFNode) => {
 
   const def = (allNodeDefinitions as any)[node.type];
 
-  for (const key of Object.keys(def.fields)) {
-    data[key] = node[key];
+  if (def) {
+    for (const key of Object.keys(def.fields || {})) {
+      data[key] = node[key];
+    }
+    return { data, definition: def as PFNodeDefinition };
   }
-  return { data, definition: def as PFNodeDefinition };
 };

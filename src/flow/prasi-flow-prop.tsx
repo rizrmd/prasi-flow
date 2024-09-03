@@ -16,15 +16,13 @@ export const PrasiFlowProp = () => {
 
   return (
     <div className={cx("c-flex c-flex-col")}>
-      {!pf_node ? (
+      {sel.nodes.length !== 1 ? (
         <>
           <div>Node:{sel.nodes.length}</div>
           <div>Edge:{sel.edges.length}</div>
         </>
       ) : (
-        <>
-          <PrasiFlowFields node={pf_node} />
-        </>
+        <>{pf_node && <PrasiFlowFields node={pf_node} />}</>
       )}
     </div>
   );
