@@ -36,10 +36,10 @@ export const sampleFlow: () => PF = () => {
         },
       ],
     },
-    [f]: { name: "f", type: PFNodeType.CODE, code: "code f" },
+    // [f]: { name: "f", type: PFNodeType.CODE, code: "code f" },
     [g]: { name: "g", type: PFNodeType.CODE, code: "code g" },
     [h]: { name: "h", type: PFNodeType.CODE, code: "code h" },
-    [i]: { name: "i", type: PFNodeType.CODE, code: "code i" },
+    // [i]: { name: "i", type: PFNodeType.CODE, code: "code i" },
     [j]: { name: "j", type: PFNodeType.CODE, code: "code j" },
   });
 

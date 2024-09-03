@@ -14,22 +14,27 @@ export const findFlow = ({
     idx: -1,
     branch: undefined as void | PFNodeBranch,
   };
-  loopPFNode(pf.nodes, pf.main_flow, ({ flow, idx, parent, branch }) => {
-    if (flow[idx] === id) {
-      if (from) {
-        if (from === parent?.id || from === id) {
-          result = { flow, idx, branch };
-          return false;
+  for (const flow of Object.values(pf.flow)) {
+    if (
+      !loopPFNode(pf.nodes, flow, ({ flow, idx, parent, branch }) => {
+        if (flow[idx] === id) {
+          if (from) {
+            if (from === parent?.id || from === id) {
+              result = { flow, idx, branch };
+              return false;
+            }
+          } else {
+            result = { flow, idx, branch };
+            return false;
+          }
         }
-      } else {
-        result = { flow, idx, branch };
-        return false;
-      }
+
+        return true;
+      })
+    ) {
+      break;
     }
-
-    return true;
-  });
-
+  }
   return result;
 };
 

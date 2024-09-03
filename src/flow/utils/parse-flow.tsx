@@ -4,6 +4,17 @@ import { parseNodes } from "./parse-node";
 export const parseFlow = (pf: PF) => {
   const parsed = { nodes: [], edges: [] };
 
+  const existing = new Set<string>();
+  for (const id of Object.keys(pf.flow)) {
+    existing.add(id);
+  }
+
+  for (const id of Object.keys(pf.nodes)) {
+    if (!existing.has(id)) {
+      pf.flow[id] = [id];
+    }
+  }
+  
   const flows = Object.values(pf.flow);
   if (flows.length > 0) {
     for (const flow of flows) {
@@ -18,5 +29,6 @@ export const parseFlow = (pf: PF) => {
       });
     }
   }
+
   return parsed;
 };

@@ -216,12 +216,30 @@ export function PrasiFlow() {
             for (const c of changes) {
               if (c.type === "position") {
                 pf.nodes[c.id].position = c.position;
-                savePF(local.pf);
               } else if (c.type === "remove") {
                 delete pf.nodes[c.id];
-                savePF(pf);
+                delete pf.flow[c.id];
+
+                for (const node of Object.values(pf.nodes)) {
+                  if (node.branches) {
+                    for (const branch of node.branches) {
+                      const idx = branch.flow.findIndex((e) => e === c.id);
+                      if (idx >= 0) {
+                        const spare_flow = branch.flow.splice(
+                          idx,
+                          branch.flow.length - idx
+                        );
+
+                        if (spare_flow.length > 1) {
+                          pf.flow[spare_flow[0]] = spare_flow;
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
+            savePF(pf);
           }
           return onNodesChange(changes);
         }}
@@ -273,7 +291,7 @@ export function PrasiFlow() {
                   ]);
                 }
               }
-            } else {
+            } else if (changes.length === 1) {
               for (const c of changes) {
                 if (c.type === "remove") {
                   const edge = edges.find((e) => e.id === c.id);
