@@ -296,18 +296,29 @@ export function PrasiFlow() {
                 if (c.type === "remove") {
                   const edge = edges.find((e) => e.id === c.id);
                   if (edge) {
-                    if (
-                      isMainPFNode({ id: edge.target, nodes: pf.nodes, edges })
-                    ) {
+                    const is_from_main = isMainPFNode({
+                      id: edge.source,
+                      nodes: pf.nodes,
+                      edges,
+                    });
+
+                    const is_to_main = isMainPFNode({
+                      id: edge.target,
+                      nodes: pf.nodes,
+                      edges,
+                      mode: "target",
+                    });
+
+                    if (is_from_main) {
                       const found = findFlow({
-                        id: edge.target,
+                        id: edge.source,
                         pf,
                         from: edge.source,
                       });
                       if (found) {
                         const spare_flow = found.flow.splice(
-                          found.idx,
-                          found.flow.length - found.idx
+                          found.idx + 1,
+                          found.flow.length - found.idx + 1
                         );
 
                         if (spare_flow.length > 1) {
@@ -315,22 +326,29 @@ export function PrasiFlow() {
                         }
 
                         savePF(local.pf);
-                        fg.reload();
+                        setTimeout(() => {
+                          fg.reload();
+                        }, 100);
                       }
                     } else {
                       for (const spare of Object.values(pf.flow)) {
                         let should_break = false;
                         loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
-                          if (flow.includes(edge.target)) {
+                          if (flow.includes(edge.source)) {
                             should_break = true;
 
-                            const spare_flow = flow.splice(
-                              idx,
-                              flow.length - idx
-                            );
+                            if (is_to_main) {
+                              flow.splice(idx + 2, flow.length - idx + 2);
+                            } else {
 
-                            if (spare_flow.length > 1) {
-                              pf.flow[spare_flow[0]] = spare_flow;
+                              const spare_flow = flow.splice(
+                                idx + 1,
+                                flow.length - idx + 1
+                              );
+
+                              if (spare_flow.length > 1) {
+                                pf.flow[spare_flow[0]] = spare_flow;
+                              }
                             }
 
                             return false;
@@ -338,6 +356,10 @@ export function PrasiFlow() {
                           return true;
                         });
                         if (should_break) {
+                          savePF(local.pf);
+                          setTimeout(() => {
+                            fg.reload();
+                          }, 100);
                           break;
                         }
                       }
