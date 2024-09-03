@@ -253,32 +253,34 @@ export function PrasiFlow() {
 
                 for (const source of source_ids) {
                   const from = pf.nodes[source];
-                  if (from.branches) {
-                    const empty_branch = from.branches.find(
-                      (e) => e.flow.length === 0
-                    );
-                    if (empty_branch) {
-                      if (target_id) {
-                        empty_branch.flow.push(target_id);
-                      }
-                    }
-                  } else {
-                    const source_flow = findFlow({ id: from.id, pf });
-                    if (source_flow) {
-                      if (node_branch) {
-                        for (const id of node_branch) {
-                          if (!source_flow.flow.includes(id))
-                            source_flow.flow.push(id);
+                  if (from) {
+                    if (from.branches) {
+                      const empty_branch = from.branches.find(
+                        (e) => e.flow.length === 0
+                      );
+                      if (empty_branch) {
+                        if (target_id) {
+                          empty_branch.flow.push(target_id);
                         }
-                      } else if (target_id) {
-                        if (!source_flow.flow.includes(target_id))
-                          source_flow.flow.push(target_id);
                       }
-                      for (let i = 0; i < source_flow.flow.length; i++) {
-                        const id = source_flow.flow[i];
-                        if (id === c.id) {
-                          source_flow.flow.splice(i, 1);
-                          break;
+                    } else {
+                      const source_flow = findFlow({ id: from.id, pf });
+                      if (source_flow) {
+                        if (node_branch) {
+                          for (const id of node_branch) {
+                            if (!source_flow.flow.includes(id))
+                              source_flow.flow.push(id);
+                          }
+                        } else if (target_id) {
+                          if (!source_flow.flow.includes(target_id))
+                            source_flow.flow.push(target_id);
+                        }
+                        for (let i = 0; i < source_flow.flow.length; i++) {
+                          const id = source_flow.flow[i];
+                          if (id === c.id) {
+                            source_flow.flow.splice(i, 1);
+                            break;
+                          }
                         }
                       }
                     }
