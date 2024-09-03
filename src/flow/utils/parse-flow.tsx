@@ -2,11 +2,11 @@ import { PF } from "../runtime/types";
 import { parseNodes } from "./parse-node";
 
 export const parseFlow = (pf: PF) => {
-  const parsed = parseNodes(pf.nodes, pf.main_flow);
+  const parsed = { nodes: [], edges: [] };
 
-  const spare_flows = Object.values(pf.spare_flow);
-  if (spare_flows.length > 0) {
-    for (const flow of spare_flows) {
+  const flows = Object.values(pf.flow);
+  if (flows.length > 0) {
+    for (const flow of flows) {
       parseNodes(pf.nodes, flow, {
         existing: {
           rf_edges: parsed.edges,

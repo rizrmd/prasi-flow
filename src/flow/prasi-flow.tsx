@@ -118,13 +118,13 @@ export function PrasiFlow() {
       const last_flow = flow.slice(idx + 1);
       flow.splice(idx + 1, flow.length - idx - 1);
 
-      if (last_flow[0] && !pf.spare_flow[last_flow[0]]) {
-        pf.spare_flow[last_flow[0]] = last_flow;
+      if (last_flow[0] && !pf.flow[last_flow[0]]) {
+        pf.flow[last_flow[0]] = last_flow;
       }
     }
-    const spare = pf.spare_flow[to];
+    const spare = pf.flow[to];
     if (spare) {
-      delete pf.spare_flow[to];
+      delete pf.flow[to];
       for (const id of spare) {
         flow.push(id);
       }
@@ -293,14 +293,14 @@ export function PrasiFlow() {
                         );
 
                         if (spare_flow.length > 1) {
-                          pf.spare_flow[spare_flow[0]] = spare_flow;
+                          pf.flow[spare_flow[0]] = spare_flow;
                         }
 
                         savePF(local.pf);
                         fg.reload();
                       }
                     } else {
-                      for (const spare of Object.values(pf.spare_flow)) {
+                      for (const spare of Object.values(pf.flow)) {
                         let should_break = false;
                         loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
                           if (flow.includes(edge.target)) {
@@ -312,7 +312,7 @@ export function PrasiFlow() {
                             );
 
                             if (spare_flow.length > 1) {
-                              pf.spare_flow[spare_flow[0]] = spare_flow;
+                              pf.flow[spare_flow[0]] = spare_flow;
                             }
 
                             return false;
@@ -403,7 +403,7 @@ export function PrasiFlow() {
                   if (!picked_branches) {
                     const spare = from_node.branches[0].flow;
                     from_node.branches[0].flow = [];
-                    pf.spare_flow[spare[0]] = spare;
+                    pf.flow[spare[0]] = spare;
                     picked_branches = from_node.branches[0];
                   }
 

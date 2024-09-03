@@ -30,8 +30,7 @@ export type PF = {
   name: string;
   path?: string;
   nodes: Record<PFNodeID, PFNode>;
-  main_flow: PFNodeID[];
-  spare_flow: Record<string, PFNodeID[]>;
+  flow: Record<string, PFNodeID[]>;
 };
 
 export type PFNodeRuntime = {
