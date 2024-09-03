@@ -6,7 +6,7 @@ export const sampleFlow: () => PF = () => {
 
   const nodes = createManyNodes({
     [a]: { name: "a", type: PFNodeType.START },
-    [b]: { name: "b", type: PFNodeType.CODE, code: "code b" },
+    [b]: { name: "b", type: PFNodeType.CODE, code: `console.log("code b")` },
     [c]: {
       name: "c",
       type: "condition",
@@ -21,7 +21,7 @@ export const sampleFlow: () => PF = () => {
         },
       ],
     },
-    [d]: { name: "d", type: PFNodeType.CODE, code: "code d" },
+    [d]: { name: "d", type: PFNodeType.CODE, code: `console.log("code d")` },
     [e]: {
       name: "e",
       type: "condition",
@@ -36,11 +36,9 @@ export const sampleFlow: () => PF = () => {
         },
       ],
     },
-    // [f]: { name: "f", type: PFNodeType.CODE, code: "code f" },
-    [g]: { name: "g", type: PFNodeType.CODE, code: "code g" },
-    [h]: { name: "h", type: PFNodeType.CODE, code: "code h" },
-    // [i]: { name: "i", type: PFNodeType.CODE, code: "code i" },
-    [j]: { name: "j", type: PFNodeType.CODE, code: "code j" },
+    [g]: { name: "g", type: PFNodeType.CODE, code: `console.log("code g")` },
+    [h]: { name: "h", type: PFNodeType.CODE, code: `console.log("code h")` },
+    [j]: { name: "j", type: PFNodeType.CODE, code: `console.log("code j")` },
   });
 
   return {

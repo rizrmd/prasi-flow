@@ -212,14 +212,23 @@ export function PrasiFlow() {
         }}
         onNodesChange={(changes) => {
           const pf = local.pf;
+          let should_save = false;
           if (pf) {
             for (const c of changes) {
               if (c.type === "position") {
                 pf.nodes[c.id].position = c.position;
               } else if (c.type === "remove") {
+                should_save = true;
+                const node = pf.nodes[c.id];
+                const node_branch = node?.branches
+                  ? node.branches.find((e) => e.flow.length > 0)?.flow
+                  : undefined;
+                const target_id = edges
+                  .filter((e) => e.source === c.id)
+                  .map((e) => e.target)[0];
+
                 delete pf.nodes[c.id];
                 delete pf.flow[c.id];
-
                 for (const node of Object.values(pf.nodes)) {
                   if (node.branches) {
                     for (const branch of node.branches) {
@@ -237,9 +246,50 @@ export function PrasiFlow() {
                     }
                   }
                 }
+
+                const source_ids = edges
+                  .filter((e) => e.target === c.id)
+                  .map((e) => e.source);
+
+                for (const source of source_ids) {
+                  const from = pf.nodes[source];
+                  if (from.branches) {
+                    const empty_branch = from.branches.find(
+                      (e) => e.flow.length === 0
+                    );
+                    if (empty_branch) {
+                      if (target_id) {
+                        empty_branch.flow.push(target_id);
+                      }
+                    }
+                  } else {
+                    const source_flow = findFlow({ id: from.id, pf });
+                    if (source_flow) {
+                      if (node_branch) {
+                        for (const id of node_branch) {
+                          if (!source_flow.flow.includes(id))
+                            source_flow.flow.push(id);
+                        }
+                      } else if (target_id) {
+                        if (!source_flow.flow.includes(target_id))
+                          source_flow.flow.push(target_id);
+                      }
+                      for (let i = 0; i < source_flow.flow.length; i++) {
+                        const id = source_flow.flow[i];
+                        if (id === c.id) {
+                          source_flow.flow.splice(i, 1);
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
-            savePF(pf);
+            if (should_save) {
+              savePF(pf);
+              fg.reload();
+            }
           }
           return onNodesChange(changes);
         }}
@@ -340,7 +390,6 @@ export function PrasiFlow() {
                             if (is_to_main) {
                               flow.splice(idx + 2, flow.length - idx + 2);
                             } else {
-
                               const spare_flow = flow.splice(
                                 idx + 1,
                                 flow.length - idx + 1
