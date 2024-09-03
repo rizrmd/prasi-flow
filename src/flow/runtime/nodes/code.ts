@@ -5,7 +5,7 @@ import { PFNodeType } from "@/flow/runtime/types.ts";
 export const nodeCode = defineNode({
   type: PFNodeType.CODE,
   fields: {
-    code: { type: PFNodeType.CODE },
+    code: { idx: 0, type: PFNodeType.CODE, label: "Code" },
   },
   process: ({ next, node, vars }) => {
     if (node.current.code) {

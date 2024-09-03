@@ -37,6 +37,7 @@ export function PrasiFlow() {
       default: RenderEdge,
     },
   });
+  fg.main = local;
 
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
@@ -203,6 +204,12 @@ export function PrasiFlow() {
         }}
         nodeTypes={local.nodeTypes}
         edgeTypes={local.edgeTypes}
+        onSelectionChange={(changes) => {
+          if (fg.prop) {
+            fg.prop.selection = changes;
+            fg.prop.render();
+          }
+        }}
         onNodesChange={(changes) => {
           const pf = local.pf;
           if (pf) {

@@ -1,4 +1,12 @@
+import { Edge, Node, ReactFlowInstance } from "@xyflow/react";
 import { PF, PFNodeLog } from "../runtime/types";
+
+export type PrasiFlowPropLocal = {
+  selection: {
+    nodes: Node[];
+    edges: Edge[];
+  };
+};
 
 const fg_default = {
   pf: null as null | PF,
@@ -8,6 +16,14 @@ const fg_default = {
   reload: (relayout?: boolean) => {},
   runner: {
     log: [] as PFNodeLog[],
+  },
+  main: null as null | {
+    pf: null | PF;
+    reactflow: null | ReactFlowInstance<Node, Edge>;
+    render: () => void;
+  },
+  prop: null as null |  PrasiFlowPropLocal & {
+    render: () => void;
   },
 };
 const w = window as unknown as {

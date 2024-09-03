@@ -19,7 +19,7 @@ export type PFNode = Record<string, any> & {
   vars?: Record<string, any>;
   branches?: PFNodeBranch[];
   position?: PFNodePosition;
-}
+};
 
 export type PFNodeLog = {
   nodeId: string;
@@ -39,7 +39,7 @@ export type PFNodeRuntime = {
   prev?: PFNode;
   first: PFNode;
   visited: { node: PFNode; branch?: PFNodeBranch }[];
-}
+};
 
 export type PFRuntime = {
   nodes: PFNode[];
@@ -55,10 +55,14 @@ export type PFNodeDefinition = Record<string, any> & {
     nextBranch: (branch?: PFNodeBranch) => void;
     next: () => void;
   }) => void | Promise<void>;
-  fields?: Record<
-    string,
-    { type: PFNodeType.STRING; }
-    | { type: PFNodeType.CODE }
-    | { type: PFNodeType.OPTIONS; options: (string | { value: string; label: string })[]; }
-  >;
+  fields?: Record<string, PFField>;
 };
+
+export type PFField = (
+  | { type: PFNodeType.STRING }
+  | { type: PFNodeType.CODE }
+  | {
+      type: PFNodeType.OPTIONS;
+      options: (string | { value: string; label: string })[];
+    }
+) & { idx: number; label: string };
