@@ -6,7 +6,14 @@ export const sampleFlow: () => PF = () => {
 
   const nodes = createManyNodes({
     [a]: { name: "a", type: "start" },
-    [b]: { name: "b", type: "code", source_code: `console.log("log b")` },
+    [b]: {
+      name: "b",
+      type: "code",
+      source_code: `
+for (let i = 0; i <4;i++){
+  console.log("log b", { haloha: i }, [{nama: 'rizky'}, {name:'miki'}], [1,2,3,4])
+}`,
+    },
     [c]: {
       name: "c",
       type: "condition",

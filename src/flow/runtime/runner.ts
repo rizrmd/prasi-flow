@@ -20,13 +20,19 @@ export const runFlow = async (
 };
 
 export type PFRunResult = Awaited<ReturnType<typeof runFlow>>;
+type PFRunVisited = {
+  node: PFNode;
+  branch?: PFNodeBranch;
+  log: any[];
+  tstamp: number;
+};
 
 const flowRuntime = async (
   pf: PF,
   runtime: PFRuntime,
   opt?: { vars?: Record<string, any>; capture_console: boolean }
 ) => {
-  const visited: { node: PFNode; branch?: PFNodeBranch; log: any[] }[] = [];
+  const visited: PFRunVisited[] = [];
   const vars = { ...opt?.vars };
   for (const current of runtime.nodes) {
     await runSingleNode({
@@ -44,7 +50,7 @@ const runSingleNode = async (opt: {
   pf: PF;
   current: PFNode;
   branch?: PFNodeBranch;
-  visited: { node: PFNode; branch?: PFNodeBranch; log?: any[] }[];
+  visited: PFRunVisited[];
   vars: Record<string, any>;
   capture_console?: boolean;
 }) => {
@@ -52,7 +58,7 @@ const runSingleNode = async (opt: {
   const def = (allNodeDefinitions as any)[
     current.type
   ] as PFNodeDefinition<any>;
-  const run_result = { node: current, branch, log: [] as any[] };
+  const run_result = { node: current, branch, log: [] as any[], tstamp: 0 };
   visited.push(run_result);
 
   if (current.vars) {
@@ -77,13 +83,15 @@ const runSingleNode = async (opt: {
           ? {
               ...console,
               log(...args: any[]) {
-                run_result.log = args;
+                run_result.log.push(args);
               },
             }
           : console,
       });
     }
   );
+
+  run_result.tstamp = Date.now();
 
   if (execute_node) {
     for (const id of execute_node.flow) {
