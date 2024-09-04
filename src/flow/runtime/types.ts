@@ -1,16 +1,12 @@
+import { allNodeDefinitions } from "./nodes";
+
 export type PFNodeID = string;
 
 export type PFNodeBranch = { code?: string; name?: string; flow: PFNodeID[] };
 
 export type PFNodePosition = { x: number; y: number };
 
-export enum PFNodeType {
-  START = "start",
-  STRING = "string",
-  CODE = "code",
-  CONDITION = "condition",
-  OPTIONS = "options",
-}
+export type PFNodeType = keyof typeof allNodeDefinitions;
 
 export type PFNode = Record<string, any> & {
   id: string;
@@ -45,7 +41,7 @@ export type PFRuntime = {
 };
 
 export type PFNodeDefinition = Record<string, any> & {
-  type: PFNodeType;
+  type: string;
   vars?: Record<string, any>;
   branches?: PFNodeBranch[];
   process: (arg: {
@@ -58,10 +54,10 @@ export type PFNodeDefinition = Record<string, any> & {
 };
 
 export type PFField = (
-  | { type: PFNodeType.STRING }
-  | { type: PFNodeType.CODE }
+  | { type: "string" }
+  | { type: "code" }
   | {
-      type: PFNodeType.OPTIONS;
+      type: "options";
       options: (string | { value: string; label: string })[];
     }
 ) & { idx: number; label: string };

@@ -1,11 +1,10 @@
 import { codeExec } from "../lib/code-exec";
 import { defineNode } from "../lib/define-node";
-import { PFNodeType } from "@/flow/runtime/types.ts";
 
 export const nodeCode = defineNode({
-  type: PFNodeType.CODE,
+  type: "code",
   fields: {
-    code: { idx: 0, type: PFNodeType.CODE, label: "Code" },
+    source_code: { idx: 0, type: "code", label: "Code" },
   },
   process: ({ next, node, vars }) => {
     if (node.current.code) {

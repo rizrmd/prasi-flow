@@ -1,17 +1,19 @@
 import { allNodeDefinitions } from "./nodes";
-import {
-  PF,
-  PFNode,
-  PFNodeDefinition,
-  PFRuntime,
-  PFNodeBranch,
-} from "./types";
+import { PF, PFNode, PFNodeDefinition, PFRuntime, PFNodeBranch } from "./types";
 
 export const runFlow = async (pf: PF, vars?: Record<string, any>) => {
-  const runtime: PFRuntime = { nodes: pf.main_flow.map((id) => pf.nodes[id]) };
+  const main_flow_id = Object.keys(pf.flow).find(
+    (id) => pf.nodes[id].type === "start"
+  );
+  if (main_flow_id) {
+    const runtime: PFRuntime = {
+      nodes: pf.flow[main_flow_id].map((id) => pf.nodes[id]),
+    };
+    const result = await flowRuntime(pf, runtime, vars);
+    return { status: "ok", visited: result.visited, vars: result.vars };
+  }
 
-  const result = await flowRuntime(pf, runtime, vars);
-  return { status: "ok", visited: result.visited, vars: result.vars };
+  return { status: "error", reason: "Main Flow Not Found" };
 };
 
 const flowRuntime = async (
