@@ -1,4 +1,5 @@
 import { Edge, Node, ReactFlowInstance } from "@xyflow/react";
+import { PFRunResult } from "../runtime/runner";
 import { PF } from "../runtime/types";
 
 export type PrasiFlowPropLocal = {
@@ -23,6 +24,8 @@ const fg_default = {
       addSelectedNodes: (arg: string[]) => void;
     };
   },
+  run: null as null | PFRunResult,
+  node_running: [] as string[],
   prop: null as
     | null
     | (PrasiFlowPropLocal & {

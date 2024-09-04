@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Play, Trash } from "lucide-react";
-import { PFRunResult, runFlow } from "./runtime/runner";
+import { runFlow } from "./runtime/runner";
 import { fg } from "./utils/flow-global";
 
 dayjs.extend(duration);
@@ -14,8 +14,9 @@ export const PrasiFlowRunner = () => {
   const local = useLocal({
     start: 0,
     status: "idle" as "idle" | "running",
-    result: null as null | PFRunResult,
     logref: null as null | HTMLDivElement,
+    delay: Number(localStorage.getItem("prasi-flow-delay")) || 300,
+    delay_timeout: null as any,
   });
   return (
     <div
@@ -43,19 +44,47 @@ export const PrasiFlowRunner = () => {
         <div className="flex items-center space-x-1">
           <Tooltip content={"Run Flow"}>
             <div
-              className="btn"
+              className={cx(
+                "btn",
+                local.status === "running" &&
+                  css`
+                    opacity: 0.3;
+                  `
+              )}
               onClick={async () => {
+                if (local.status === "running") return;
                 if (fg.pf) {
                   local.status = "running";
                   local.start = Date.now();
-                  local.result = null;
+                  fg.run = null;
                   local.render();
 
-                  local.result = await runFlow(fg.pf, {
+                  fg.run = await runFlow(fg.pf, {
                     capture_console: true,
+                    delay: local.delay,
+                    before_node({ node }) {
+                      fg.node_running.push(node.id);
+                      fg.main?.render();
+                    },
+                    after_node({ visited, node }) {
+                      fg.node_running = fg.node_running.filter(
+                        (id) => id !== node.id
+                      );
+                      fg.run = { visited } as any;
+                      local.render();
+                      fg.main?.render();
+
+                      setTimeout(() => {
+                        const div = local.logref;
+                        if (div) {
+                          div.scrollTop = div.scrollHeight;
+                        }
+                      });
+                    },
                   });
                   local.status = "idle";
                   local.render();
+                  fg.main?.render();
 
                   setTimeout(() => {
                     const div = local.logref;
@@ -69,25 +98,57 @@ export const PrasiFlowRunner = () => {
               <Play />
             </div>
           </Tooltip>
-          {/* <Tooltip content={"Debug Flow - Step by Step"}>
-            <div className="btn">
-              <BugPlay />
-            </div>
-          </Tooltip> */}
-        </div>
-        <div className="flex items-center">
+
           <Tooltip content={"Clear Log"}>
             <div
               className="btn"
               onClick={() => {
-                local.result = null;
+                fg.run = null;
+                fg.node_running = [];
+                fg.main?.render();
                 local.render();
               }}
             >
               <Trash />
             </div>
           </Tooltip>
+
+          <label className="border text-xs flex items-stretch rounded-sm">
+            <div className="bg-slate-100 px-1 flex items-center rounded-l-sm">
+              Delay
+            </div>
+            <input
+              type="text"
+              value={local.delay}
+              className={cx(
+                "px-1 outline-none",
+                css`
+                  padding-top: 2px;
+                  padding-bottom: 2px;
+                  width: 40px;
+                `
+              )}
+              onChange={(e) => {
+                const val = Number(e.currentTarget.value);
+                if (!isNaN(val)) {
+                  local.delay = val;
+                  local.render();
+                  clearTimeout(local.delay_timeout);
+                  local.delay_timeout = setTimeout(() => {
+                    localStorage.setItem("prasi-flow-delay", val + "");
+                  }, 100);
+                }
+              }}
+            />
+            <div className="px-1 flex items-center"> ms</div>
+          </label>
+          {/* <Tooltip content={"Debug Flow - Step by Step"}>
+            <div className="btn">
+              <BugPlay />
+            </div>
+          </Tooltip> */}
         </div>
+        <div className="flex items-center"></div>
       </div>
       <div
         className="flex-1 relative overflow-auto"
@@ -105,12 +166,12 @@ export const PrasiFlowRunner = () => {
             `
           )}
         >
-          {!local.result ? (
+          {!fg.run ? (
             <div className="text-slate-400 p-2">
               {local.status === "idle" ? "Flow Log..." : "🚀 Running Flow..."}
             </div>
           ) : (
-            local.result.visited?.map((e, idx) => {
+            fg.run.visited?.map((e, idx) => {
               return (
                 <div
                   key={idx}
@@ -189,23 +250,59 @@ export const PrasiFlowRunner = () => {
               );
             })
           )}
-          {local.result?.visited && (
+          {fg.run?.visited && (
             <div
               className={cx(
                 "select-none",
                 css`
                   padding: 10px;
-                  height: 100px;
-                  font-size: 9px;
-                  color: #ccc;
+                  height: 50px;
+                  color: ${local.status === "idle" ? "#ccc" : "#63a2ff"};
+                  * {
+                    font-size: 9px;
+                  }
                 `
               )}
             >
-              &mdash; END &mdash;
+              {local.status === "idle" && <div>&mdash; END &mdash;</div>}
+              {local.status === "running" && (
+                <div className="flex items-center space-x-1">
+                  <LoadingSpinner size={12} /> <div>Running...</div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+};
+
+export interface ISVGProps extends React.SVGProps<SVGSVGElement> {
+  size?: number;
+  className?: string;
+}
+
+export const LoadingSpinner = ({
+  size = 24,
+  className,
+  ...props
+}: ISVGProps) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      {...props}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cx("animate-spin", className)}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
   );
 };

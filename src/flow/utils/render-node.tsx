@@ -2,7 +2,10 @@ import { Handle, Position, useConnection, useStore, Node } from "@xyflow/react";
 import { MoveIcon } from "lucide-react";
 import { fg } from "./flow-global";
 
-export const RenderNode = (arg: { id: string; data: { label: string } }) => {
+export const RenderNode = (arg: {
+  id: string;
+  data: { label: string; type: string };
+}) => {
   const { data, id } = arg;
   const connection = useConnection<Node>();
   const isTarget = connection.inProgress && connection.fromNode.id !== id;
@@ -19,14 +22,32 @@ export const RenderNode = (arg: { id: string; data: { label: string } }) => {
   return (
     <div
       className={cx(
-        "p-2 relative",
+        data.type !== "start" &&
+          "p-2 relative border border-slate-800 rounded-sm pf-node",
         css`
           &:hover {
             .move {
               opacity: 1;
             }
           }
-        `
+        `,
+        fg.run?.visited?.find((e) => e.node.id === arg.id) &&
+          css`
+            background: #f3ffef;
+            border: 1px solid #175203;
+          `,
+        fg.node_running.includes(arg.id) &&
+          (fg.node_running[fg.node_running.length - 1] === id ||
+          !fg.pf!.nodes[arg.id].branches
+            ? css`
+                color: white;
+                background: #419625;
+                border: 1px solid #419625;
+              `
+            : css`
+                background: #f8f5d5;
+                border: 1px solid #91860c;
+              `)
       )}
       onPointerDown={() => {
         selected.reset();
@@ -58,17 +79,19 @@ export const RenderNode = (arg: { id: string; data: { label: string } }) => {
         />
       )}
       {data.label}
-      {(!connection.inProgress || isTarget) && (
+      {(!connection.inProgress || isTarget) && data.type !== "start" && (
         <Handle type="target" position={Position.Top} />
       )}
 
-      <div
-        className={cx(
-          "move transition-all opacity-20 p-2 absolute top-0 right-0"
-        )}
-      >
-        <MoveIcon size={12} />
-      </div>
+      {data.type !== "start" && (
+        <div
+          className={cx(
+            "move transition-all opacity-20 p-2 absolute top-0 right-0"
+          )}
+        >
+          <MoveIcon size={12} />
+        </div>
+      )}
     </div>
   );
 };

@@ -13,13 +13,12 @@ import {
   useStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Sparkles } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { useEffect } from "react";
 import { sampleFlow } from "./runtime/test/fixture";
 import { PF, PFNodeID } from "./runtime/types";
 import { findFlow, loopPFNode } from "./utils/find-node";
 import { fg } from "./utils/flow-global";
-import { isMainPFNode } from "./utils/is-main-node";
 import { getLayoutedElements } from "./utils/node-layout";
 import { parseFlow } from "./utils/parse-flow";
 import { RenderEdge } from "./utils/render-edge";
@@ -155,6 +154,7 @@ export function PrasiFlow() {
 
           .react-flow__node {
             cursor: pointer;
+            border: 0px;
 
             &.start {
               border: 1px solid green;
@@ -167,10 +167,9 @@ export function PrasiFlow() {
               background-color: #edffed;
             }
 
-            &.selected {
+            &.selected > .pf-node {
               outline: 1px solid blue;
               border: 1px solid blue;
-              background-color: #e8f3ff;
             }
           }
           .react-flow__node-default {
@@ -187,6 +186,11 @@ export function PrasiFlow() {
                 fill: blue;
               }
             }
+          }
+          .react-flow__controls-button .lucide {
+            fill: transparent;
+            max-width: 15px;
+            max-height: 15px;
           }
         `
       )}
@@ -353,71 +357,29 @@ export function PrasiFlow() {
                 if (c.type === "remove") {
                   const edge = edges.find((e) => e.id === c.id);
                   if (edge) {
-                    const is_from_main = isMainPFNode({
-                      id: edge.source,
-                      nodes: pf.nodes,
-                      edges,
-                    });
-
-                    const is_to_main = isMainPFNode({
-                      id: edge.target,
-                      nodes: pf.nodes,
-                      edges,
-                      mode: "target",
-                    });
-
-                    if (is_from_main) {
-                      const found = findFlow({
-                        id: edge.source,
-                        pf,
-                        from: edge.source,
-                      });
-                      if (found) {
-                        const spare_flow = found.flow.splice(
-                          found.idx + 1,
-                          found.flow.length - found.idx + 1
-                        );
-
-                        if (spare_flow.length > 1) {
-                          pf.flow[spare_flow[0]] = spare_flow;
+                    for (const flow of Object.values(pf.flow)) {
+                      let should_break = false;
+                      loopPFNode(pf.nodes, flow, ({ flow, idx, parent }) => {
+                        if (flow.includes(edge.target)) {
+                          if (flow[idx - 1] === edge.source) {
+                            flow.splice(idx, 1);
+                            should_break = true;
+                            return false;
+                          } else if (parent?.id === edge.source) {
+                            flow.splice(idx, 1);
+                            should_break = true;
+                            return false;
+                          }
                         }
 
+                        return true;
+                      });
+                      if (should_break) {
                         savePF(local.pf);
                         setTimeout(() => {
                           fg.reload();
                         }, 100);
-                      }
-                    } else {
-                      for (const spare of Object.values(pf.flow)) {
-                        let should_break = false;
-                        loopPFNode(pf.nodes, spare, ({ flow, idx }) => {
-                          if (flow.includes(edge.source)) {
-                            should_break = true;
-
-                            if (is_to_main) {
-                              flow.splice(idx + 2, flow.length - idx + 2);
-                            } else {
-                              const spare_flow = flow.splice(
-                                idx + 1,
-                                flow.length - idx + 1
-                              );
-
-                              if (spare_flow.length > 1) {
-                                pf.flow[spare_flow[0]] = spare_flow;
-                              }
-                            }
-
-                            return false;
-                          }
-                          return true;
-                        });
-                        if (should_break) {
-                          savePF(local.pf);
-                          setTimeout(() => {
-                            fg.reload();
-                          }, 100);
-                          break;
-                        }
+                        break;
                       }
                     }
                   }
@@ -527,7 +489,7 @@ export function PrasiFlow() {
         <Background />
         <Controls position="top-left" showInteractive={false}>
           <ControlButton onClick={() => relayoutNodes()} title="auto layout">
-            <Sparkles />
+            <LayoutDashboard strokeWidth={1.8} />
           </ControlButton>
         </Controls>
       </ReactFlow>

@@ -2,8 +2,9 @@ import { codeExec } from "../lib/code-exec";
 import { defineNode } from "../lib/define-node";
 
 export const nodeCondition = defineNode({
-  type: 'condition',
-  process: async ({ node, vars, nextBranch }) => {
+  type: "condition",
+  process: async ({ node, vars, processBranch, next }) => {
+    const branches = [];
     if (node.current.branches) {
       for (const branch of node.current.branches) {
         if (branch.code) {
@@ -11,15 +12,18 @@ export const nodeCondition = defineNode({
             code: `return ${branch.code}`,
             node,
             vars,
+            console,
           });
           if (result) {
-            nextBranch(branch);
+            branches.push(processBranch(branch));
             break;
           }
         } else {
-          nextBranch(branch);
+          branches.push(processBranch(branch));
         }
       }
     }
+    await Promise.all(branches);
+    next();
   },
 });

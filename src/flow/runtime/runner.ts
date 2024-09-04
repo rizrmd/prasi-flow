@@ -1,10 +1,14 @@
 import { allNodeDefinitions } from "./nodes";
 import { PF, PFNode, PFNodeDefinition, PFRuntime, PFNodeBranch } from "./types";
 
-export const runFlow = async (
-  pf: PF,
-  opt?: { vars?: Record<string, any>; capture_console: boolean }
-) => {
+type RunFlowOpt = {
+  vars?: Record<string, any>;
+  capture_console: boolean;
+  delay?: number;
+  after_node?: (arg: { visited: PFRunVisited[]; node: PFNode }) => void;
+  before_node?: (arg: { visited: PFRunVisited[]; node: PFNode }) => void;
+};
+export const runFlow = async (pf: PF, opt?: RunFlowOpt) => {
   const main_flow_id = Object.keys(pf.flow).find(
     (id) => pf.nodes[id].type === "start"
   );
@@ -22,17 +26,14 @@ export const runFlow = async (
 export type PFRunResult = Awaited<ReturnType<typeof runFlow>>;
 type PFRunVisited = {
   node: PFNode;
-  branch?: PFNodeBranch;
+  parent_branch?: PFNodeBranch;
   log: any[];
+  branching?: boolean;
   tstamp: number;
   error: any;
 };
 
-const flowRuntime = async (
-  pf: PF,
-  runtime: PFRuntime,
-  opt?: { vars?: Record<string, any>; capture_console: boolean }
-) => {
+const flowRuntime = async (pf: PF, runtime: PFRuntime, opt?: RunFlowOpt) => {
   const visited: PFRunVisited[] = [];
   const vars = { ...opt?.vars };
   for (const current of runtime.nodes) {
@@ -42,7 +43,7 @@ const flowRuntime = async (
         current,
         visited,
         vars,
-        capture_console: opt?.capture_console,
+        opt,
       }))
     ) {
       break;
@@ -51,26 +52,33 @@ const flowRuntime = async (
   return { visited, vars };
 };
 
-const runSingleNode = async (opt: {
+const runSingleNode = async (arg: {
   pf: PF;
   current: PFNode;
   branch?: PFNodeBranch;
   visited: PFRunVisited[];
   vars: Record<string, any>;
-  capture_console?: boolean;
+  opt?: RunFlowOpt;
 }) => {
-  const { pf, visited, vars, current, branch, capture_console } = opt;
+  const { pf, visited, vars, current, branch, opt } = arg;
+  const { capture_console, after_node, before_node } = opt || {};
   const def = (allNodeDefinitions as any)[
     current.type
   ] as PFNodeDefinition<any>;
-  const run_result = {
+
+  if (before_node) {
+    before_node({ visited: visited, node: current });
+  }
+
+  const run_visit: PFRunVisited = {
     node: current,
-    branch,
+    parent_branch: branch,
     log: [] as any[],
     tstamp: 0,
+    branching: false,
     error: null,
   };
-  visited.push(run_result);
+  visited.push(run_visit);
 
   if (current.vars) {
     for (const [k, v] of Object.entries(current.vars)) {
@@ -90,13 +98,39 @@ const runSingleNode = async (opt: {
               prev: visited[visited.length - 1].node,
               visited,
             },
-            nextBranch: resolve,
+            processBranch: async (branch) => {
+              run_visit.tstamp = Date.now();
+
+              if (!run_visit.branching) {
+                run_visit.branching = true;
+
+                if (after_node) {
+                  after_node({ visited: visited, node: current });
+                }
+              }
+
+              for (const id of branch.flow) {
+                const current = pf.nodes[id];
+                if (!current) break;
+                if (
+                  !(await runSingleNode({
+                    pf,
+                    current,
+                    visited,
+                    vars,
+                    opt,
+                  }))
+                ) {
+                  break;
+                }
+              }
+            },
             next: resolve,
             console: capture_console
               ? {
                   ...console,
                   log(...args: any[]) {
-                    run_result.log.push(args);
+                    run_visit.log.push(args);
                   },
                 }
               : console,
@@ -107,7 +141,19 @@ const runSingleNode = async (opt: {
       }
     );
 
-    run_result.tstamp = Date.now();
+    if (!run_visit.branching) {
+      run_visit.tstamp = Date.now();
+    }
+
+    if (opt?.delay) {
+      await new Promise((done) => {
+        setTimeout(done, opt.delay);
+      });
+    }
+
+    if (after_node) {
+      after_node({ visited: visited, node: current });
+    }
 
     if (execute_node) {
       for (const id of execute_node.flow) {
@@ -119,16 +165,16 @@ const runSingleNode = async (opt: {
             branch: execute_node,
             visited,
             vars,
-            capture_console,
+            opt,
           });
         }
       }
     }
     return true;
   } catch (e: any) {
-    run_result.tstamp = Date.now();
+    run_visit.tstamp = Date.now();
     if (e) {
-      run_result.error = e;
+      run_visit.error = e;
       console.error(e);
     }
     return false;

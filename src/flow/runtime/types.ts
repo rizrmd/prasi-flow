@@ -42,7 +42,7 @@ export type PFNodeDefinition<F extends Record<string, PFField>> = {
   process: (arg: {
     vars: Record<string, any>;
     node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;
-    nextBranch: (branch?: PFNodeBranch) => void;
+    processBranch: (branch: PFNodeBranch) => Promise<void>;
     next: () => void;
     console: typeof console;
   }) => void | Promise<void>;
