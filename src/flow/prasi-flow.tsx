@@ -453,14 +453,19 @@ export function PrasiFlow() {
                     y: from.position.y + 100,
                   };
                   fg.pointer_to = null;
-                  const dummyCode = {
+                  const new_node = {
                     type: "code",
                     id: createId(),
                     position,
                   };
-                  local.pf.nodes[dummyCode.id] = dummyCode;
-                  f.flow.push(dummyCode.id);
+                  local.pf.nodes[new_node.id] = new_node;
+                  f.flow.push(new_node.id);
                   fg.reload();
+
+                  setTimeout(() => {
+                    fg.main?.action.resetSelectedElements();
+                    fg.main?.action.addSelectedNodes([new_node.id]);
+                  });
                   return;
                 }
               }

@@ -1,11 +1,11 @@
 import { Tooltip } from "@/components/ui/tooltip";
-import { BugPlay, Play, Trash } from "lucide-react";
-import { PFRunResult, runFlow } from "./runtime/runner";
-import { fg } from "./utils/flow-global";
 import JsonView from "@uiw/react-json-view";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Play, Trash } from "lucide-react";
+import { PFRunResult, runFlow } from "./runtime/runner";
+import { fg } from "./utils/flow-global";
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -50,7 +50,7 @@ export const PrasiFlowRunner = () => {
                   local.start = Date.now();
                   local.result = null;
                   local.render();
-                  
+
                   local.result = await runFlow(fg.pf, {
                     capture_console: true,
                   });
@@ -115,7 +115,8 @@ export const PrasiFlowRunner = () => {
                 <div
                   key={idx}
                   className={cx(
-                    "border-b font-mono flex flex-col items-stretch bg-slate-100 hover:bg-blue-100"
+                    "border-b font-mono flex flex-col items-stretch  hover:bg-blue-100",
+                    e.error ? "bg-red-100" : "bg-slate-100"
                   )}
                   onClick={() => {
                     fg.main?.action.resetSelectedElements();
@@ -136,15 +137,32 @@ export const PrasiFlowRunner = () => {
                           `
                         )}
                       >
-                        {dayjs(Math.max(0, e.tstamp - local.start)).format(
-                          `m[m] s[s] SSS[ms]`
-                        )}
+                        {dayjs(
+                          e.node.type === "start"
+                            ? 0
+                            : Math.max(0, e.tstamp - local.start)
+                        ).format(`m[m] s[s] SSS[ms]`)}
                       </div>
                       <div>
+                        {e.error && (
+                          <span className="bg-red-600 text-white px-2 mr-2">
+                            ERROR
+                          </span>
+                        )}
                         {e.node.type} {e.node.name}
                       </div>
                     </div>
                   </div>
+                  {e.error && (
+                    <div
+                      className="ml-2 bg-white p-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      {e.error.message}
+                    </div>
+                  )}
                   {e.log.length > 0 && (
                     <div
                       className="ml-2 bg-white p-2"
@@ -154,13 +172,13 @@ export const PrasiFlowRunner = () => {
                     >
                       {e.log.map((line, idx) => (
                         <div key={idx} className={cx("flex space-x-1")}>
-                          {line.map((e: any) =>
+                          {line.map((e: any, idx: number) =>
                             typeof e === "object" ? (
-                              <div>
+                              <div key={idx}>
                                 <JsonView value={e} collapsed />
                               </div>
                             ) : (
-                              <div>{e}</div>
+                              <div key={idx}>{e}</div>
                             )
                           )}
                         </div>
@@ -170,6 +188,21 @@ export const PrasiFlowRunner = () => {
                 </div>
               );
             })
+          )}
+          {local.result?.visited && (
+            <div
+              className={cx(
+                "select-none",
+                css`
+                  padding: 10px;
+                  height: 100px;
+                  font-size: 9px;
+                  color: #ccc;
+                `
+              )}
+            >
+              &mdash; END &mdash;
+            </div>
           )}
         </div>
       </div>

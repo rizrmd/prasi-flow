@@ -11,7 +11,11 @@ export const sampleFlow: () => PF = () => {
       type: "code",
       source_code: `
 for (let i = 0; i <4;i++){
-  console.log("log b", { haloha: i }, [{nama: 'rizky'}, {name:'miki'}], [1,2,3,4])
+  console.log("log b",
+   { haloha: i }, 
+  [{nama: 'rizky'}, 
+  {name:'miki'}],
+   [1,2,3,4])
 }`,
     },
     [c]: {

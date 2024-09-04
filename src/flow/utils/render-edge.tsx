@@ -6,9 +6,9 @@ import {
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
-import {PFNode, PFNodeType} from "../runtime/types";
-import { fg } from "./flow-global";
+import { PFNode } from "../runtime/types";
 import { findFlow } from "./find-node";
+import { fg } from "./flow-global";
 import { savePF } from "./save-pf";
 
 export const RenderEdge = ({
@@ -94,16 +94,35 @@ export const RenderEdge = ({
                   from = findFlow({ id: edge.source, pf });
                 }
 
-                if (from) {
+                const source = pf.nodes[edge.source];
+                const target = pf.nodes[edge.target];
+                if (
+                  from &&
+                  source &&
+                  source.position &&
+                  target &&
+                  target.position
+                ) {
+                  source.position.y -= 20;
+                  target.position.y += 20;
                   const pf_node: PFNode = {
                     id: createId(),
-                    type: PFNodeType.CODE,
+                    type: "code",
+                    position: {
+                      x: source.position.x,
+                      y: source.position.y + 75,
+                    },
                   };
                   pf.nodes[pf_node.id] = pf_node;
                   from.flow.splice(from.idx + 1, 0, pf_node.id);
                   savePF(pf);
 
                   fg.reload();
+
+                  setTimeout(() => {
+                    fg.main?.action.resetSelectedElements();
+                    fg.main?.action.addSelectedNodes([pf_node.id]);
+                  });
                 }
               }
             }
