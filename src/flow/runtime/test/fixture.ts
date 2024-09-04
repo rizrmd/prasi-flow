@@ -6,7 +6,7 @@ export const sampleFlow: () => PF = () => {
 
   const nodes = createManyNodes({
     [a]: { name: "a", type: "start" },
-    [b]: { name: "b", type: "code", source_code: `console.log("code b")` },
+    [b]: { name: "b", type: "code", source_code: `console.log("log b")` },
     [c]: {
       name: "c",
       type: "condition",
@@ -21,7 +21,7 @@ export const sampleFlow: () => PF = () => {
         },
       ],
     },
-    [d]: { name: "d", type: "code", source_code: `console.log("code d")` },
+    [d]: { name: "d", type: "code", source_code: `console.log("log d")` },
     [e]: {
       name: "e",
       type: "condition",
@@ -36,9 +36,9 @@ export const sampleFlow: () => PF = () => {
         },
       ],
     },
-    [g]: { name: "g", type: "code", source_code: `console.log("code g")` },
-    [h]: { name: "h", type: "code", source_code: `console.log("code h")` },
-    [j]: { name: "j", type: "code", source_code: `console.log("code j")` },
+    [g]: { name: "g", type: "code", source_code: `console.log("log g")` },
+    [h]: { name: "h", type: "code", source_code: `console.log("log h")` },
+    [j]: { name: "j", type: "code", source_code: `console.log("log j")` },
   });
 
   return {

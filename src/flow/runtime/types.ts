@@ -17,11 +17,6 @@ export type PFNode = Record<string, any> & {
   position?: PFNodePosition;
 };
 
-export type PFNodeLog = {
-  nodeId: string;
-  log: string;
-};
-
 export type PF = {
   name: string;
   path?: string;
@@ -29,8 +24,8 @@ export type PF = {
   flow: Record<string, PFNodeID[]>;
 };
 
-export type PFNodeRuntime = {
-  current: PFNode;
+export type PFNodeRuntime<T extends Record<string, any>> = {
+  current: PFNode & T;
   prev?: PFNode;
   first: PFNode;
   visited: { node: PFNode; branch?: PFNodeBranch }[];
@@ -40,17 +35,18 @@ export type PFRuntime = {
   nodes: PFNode[];
 };
 
-export type PFNodeDefinition = Record<string, any> & {
+export type PFNodeDefinition<F extends Record<string, PFField>> = {
   type: string;
   vars?: Record<string, any>;
   branches?: PFNodeBranch[];
   process: (arg: {
     vars: Record<string, any>;
-    node: PFNodeRuntime;
+    node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;
     nextBranch: (branch?: PFNodeBranch) => void;
     next: () => void;
+    console: typeof console;
   }) => void | Promise<void>;
-  fields?: Record<string, PFField>;
+  fields?: F;
 };
 
 export type PFField = (

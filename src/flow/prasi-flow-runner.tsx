@@ -1,8 +1,12 @@
 import { Tooltip } from "@/components/ui/tooltip";
 import { BugPlay, Play } from "lucide-react";
+import { PFRunResult, runFlow } from "./runtime/runner";
 import { fg } from "./utils/flow-global";
 
 export const PrasiFlowRunner = () => {
+  const local = useLocal({
+    result: null as null | PFRunResult,
+  });
   return (
     <div
       className={cx(
@@ -28,7 +32,17 @@ export const PrasiFlowRunner = () => {
       <div className="border-b min-h-8 text-sm px-2 flex justify-between items-stretch space-x-1">
         <div className="flex items-center space-x-1">
           <Tooltip content={"Run Flow"}>
-            <div className="btn">
+            <div
+              className="btn"
+              onClick={async () => {
+                if (fg.pf) {
+                  local.result = await runFlow(fg.pf, {
+                    capture_console: true,
+                  });
+                  local.render();
+                }
+              }}
+            >
               <Play />
             </div>
           </Tooltip>
@@ -41,13 +55,37 @@ export const PrasiFlowRunner = () => {
         <div className="flex items-center"></div>
       </div>
       <div className="flex-1 relative overflow-auto">
-        <div className="absolute inset-0 font-mono text-xs p-2">
-          {fg.runner.log.length === 0 ? (
-            <div className="text-slate-400">Flow Log...</div>
+        <div className="absolute inset-0 font-mono text-xs">
+          {!local.result ? (
+            <div className="text-slate-400 p-2">Flow Log...</div>
           ) : (
-            fg.runner.log.map((e) => {
-              return "";
-            })
+            local.result.visited
+              ?.filter((e) => e.log?.length > 0)
+              .map((e, idx) => {
+                return (
+                  <div
+                    key={idx}
+                    className={cx(
+                      "border-b font-mono text-[9px] flex space-x-1 items-center hover:bg-blue-50"
+                    )}
+                  >
+                    <div
+                      className="border-r px-2 py-1 bg-slate-100 cursor-pointer select-none"
+                      onClick={() => {
+                        fg.main?.action.resetSelectedElements();
+                        fg.main?.action.addSelectedNodes([e.node.id]);
+                      }}
+                    >
+                      {e.node.type} {e.node.name}
+                    </div>
+                    <div className="flex-1">
+                      {e.log.map((e) =>
+                        typeof e === "object" ? JSON.stringify(e) : e
+                      )}
+                    </div>
+                  </div>
+                );
+              })
           )}
         </div>
       </div>

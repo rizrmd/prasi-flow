@@ -6,9 +6,9 @@ export const nodeCode = defineNode({
   fields: {
     source_code: { idx: 0, type: "code", label: "Code" },
   },
-  process: ({ next, node, vars }) => {
-    if (node.current.code) {
-      codeExec({ code: node.current.code, node, vars });
+  process: ({ next, node, vars, console }) => {
+    if (node.current.source_code) {
+      codeExec({ code: node.current.source_code, node, vars, console });
     }
     next();
   },

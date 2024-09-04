@@ -10,19 +10,20 @@ import {
   ReactFlowInstance,
   useEdgesState,
   useNodesState,
+  useStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
-import { RenderEdge } from "./utils/render-edge";
-import { RenderNode } from "./utils/render-node";
 import { sampleFlow } from "./runtime/test/fixture";
-import { PF, PFNodeID, PFNodeType } from "./runtime/types";
+import { PF, PFNodeID } from "./runtime/types";
 import { findFlow, loopPFNode } from "./utils/find-node";
 import { fg } from "./utils/flow-global";
 import { isMainPFNode } from "./utils/is-main-node";
 import { getLayoutedElements } from "./utils/node-layout";
 import { parseFlow } from "./utils/parse-flow";
+import { RenderEdge } from "./utils/render-edge";
+import { RenderNode } from "./utils/render-node";
 import { savePF } from "./utils/save-pf";
 
 export function PrasiFlow() {
@@ -35,6 +36,10 @@ export function PrasiFlow() {
     },
     edgeTypes: {
       default: RenderEdge,
+    },
+    action: {
+      resetSelectedElements: () => {},
+      addSelectedNodes: () => {},
     },
   });
   fg.main = local;
@@ -449,7 +454,7 @@ export function PrasiFlow() {
                   };
                   fg.pointer_to = null;
                   const dummyCode = {
-                    type: PFNodeType.CODE,
+                    type: "code",
                     id: createId(),
                     position,
                   };
@@ -513,6 +518,7 @@ export function PrasiFlow() {
           }
         }}
       >
+        <Selection />
         <Background />
         <Controls position="top-left" showInteractive={false}>
           <ControlButton onClick={() => relayoutNodes()} title="auto layout">
@@ -523,3 +529,13 @@ export function PrasiFlow() {
     </div>
   );
 }
+
+const Selection = () => {
+  const { resetSelectedElements, addSelectedNodes } = useStore((store) => ({
+    resetSelectedElements: store.resetSelectedElements,
+    addSelectedNodes: store.addSelectedNodes,
+  }));
+
+  if (fg.main) fg.main.action = { resetSelectedElements, addSelectedNodes };
+  return <></>;
+};
