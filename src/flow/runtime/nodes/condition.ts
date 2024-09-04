@@ -3,6 +3,15 @@ import { defineNode } from "../lib/define-node";
 
 export const nodeCondition = defineNode({
   type: "condition",
+  branching(arg) {
+    return [];
+  },
+  fields: {
+    conditions: {
+      type: "array",
+      fields: { condition: { type: "code" }, name: { type: "string" } },
+    },
+  },
   process: async ({ node, vars, processBranch, next }) => {
     const branches = [];
     if (node.current.branches) {

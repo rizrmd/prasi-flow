@@ -38,7 +38,10 @@ export type PFRuntime = {
 export type PFNodeDefinition<F extends Record<string, PFField>> = {
   type: string;
   vars?: Record<string, any>;
-  branches?: PFNodeBranch[];
+  branching?: (arg: {
+    vars: Record<string, any>;
+    node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;
+  }) => PFNodeBranch[];
   process: (arg: {
     vars: Record<string, any>;
     node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;

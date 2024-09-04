@@ -223,6 +223,7 @@ export function PrasiFlow() {
           const pf = local.pf;
           let should_save = false;
           if (pf) {
+            let select_id = "";
             for (const c of changes) {
               if (c.type === "position") {
                 pf.nodes[c.id].position = c.position;
@@ -261,6 +262,7 @@ export function PrasiFlow() {
                   .map((e) => e.source);
 
                 for (const source of source_ids) {
+                  if (!select_id) select_id = source;
                   const from = pf.nodes[source];
                   if (from) {
                     if (from.branches) {
@@ -300,6 +302,13 @@ export function PrasiFlow() {
             if (should_save) {
               savePF(pf);
               fg.reload();
+
+              if (select_id) {
+                setTimeout(() => {
+                  fg.main?.action.resetSelectedElements();
+                  fg.main?.action.addSelectedNodes([select_id]);
+                }, 200);
+              }
             }
           }
           return onNodesChange(changes);
@@ -361,12 +370,14 @@ export function PrasiFlow() {
                       let should_break = false;
                       loopPFNode(pf.nodes, flow, ({ flow, idx, parent }) => {
                         if (flow.includes(edge.target)) {
-                          if (flow[idx - 1] === edge.source) {
-                            flow.splice(idx, 1);
-                            should_break = true;
-                            return false;
-                          } else if (parent?.id === edge.source) {
-                            flow.splice(idx, 1);
+                          if (
+                            flow[idx - 1] === edge.source ||
+                            parent?.id === edge.source
+                          ) {
+                            const res = flow.splice(idx, flow.length - idx);
+                            if (res.length > 0) {
+                              pf.flow[res[0]] = res;
+                            }
                             should_break = true;
                             return false;
                           }
@@ -414,6 +425,7 @@ export function PrasiFlow() {
                     x: from.position.x,
                     y: from.position.y + 100,
                   };
+                  position.x -= 70;
                   fg.pointer_to = null;
                   const new_node = {
                     type: "code",
@@ -421,7 +433,10 @@ export function PrasiFlow() {
                     position,
                   };
                   local.pf.nodes[new_node.id] = new_node;
+
                   f.flow.push(new_node.id);
+
+                  savePF(local.pf);
                   fg.reload();
 
                   setTimeout(() => {
@@ -445,18 +460,6 @@ export function PrasiFlow() {
 
             if (!found && pf) {
               const from_node = pf.nodes[from_id];
-              // const to_node = pf.nodes[to_id];
-              // const is_from_main = isMainPFNode({
-              //   id: from_node.id,
-              //   nodes: pf.nodes,
-              //   edges,
-              // });
-              // const is_to_main = isMainPFNode({
-              //   id: to_node.id,
-              //   nodes: pf.nodes,
-              //   edges,
-              // });
-
               if (from_node) {
                 if (from_node.branches) {
                   let picked_branches = from_node.branches?.find(
@@ -475,7 +478,7 @@ export function PrasiFlow() {
                   }
                 } else {
                   const found = findFlow({ id: from_node.id, pf });
-                  if (found) {
+                  if (found && !found.flow.includes(to_id)) {
                     connectTo(pf, from_id, to_id, found.flow);
                   }
                 }

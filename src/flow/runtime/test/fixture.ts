@@ -21,6 +21,7 @@ for (let i = 0; i <4;i++){
     [c]: {
       name: "c",
       type: "condition",
+      conditions: [{ condition: "", name: "Branch 1" }],
       branches: [
         {
           name: "Branch 1",

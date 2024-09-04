@@ -54,6 +54,8 @@ export const PrasiFlowRunner = () => {
               onClick={async () => {
                 if (local.status === "running") return;
                 if (fg.pf) {
+                  console.log(fg.pf);
+
                   local.status = "running";
                   local.start = Date.now();
                   fg.run = null;
@@ -163,6 +165,9 @@ export const PrasiFlowRunner = () => {
               * {
                 font-size: 12px;
               }
+              .node-type {
+                font-size: 9px;
+              }
             `
           )}
         >
@@ -184,33 +189,41 @@ export const PrasiFlowRunner = () => {
                     fg.main?.action.addSelectedNodes([e.node.id]);
                   }}
                 >
-                  <div className="pl-2">
+                  <div
+                    className={cx(
+                      "cursor-pointer pl-2 py-1 select-none flex space-x-2 items-center"
+                    )}
+                  >
                     <div
                       className={cx(
-                        "cursor-pointer select-none flex space-x-2 items-center"
+                        "text-blue-600 font-mono",
+                        css`
+                          font-size: 90%;
+                        `
                       )}
                     >
+                      {dayjs(
+                        e.node.type === "start"
+                          ? 0
+                          : Math.max(0, e.tstamp - local.start)
+                      ).format(`m[m] s[s] SSS[ms]`)}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {e.error && (
+                        <span className="bg-red-600 text-white px-2 mr-2">
+                          ERROR
+                        </span>
+                      )}
                       <div
                         className={cx(
-                          "text-blue-600 font-mono",
-                          css`
-                            font-size: 90%;
-                          `
+                          "uppercase node-type border border-slate-500 font-mono px-2 bg-white"
                         )}
                       >
-                        {dayjs(
-                          e.node.type === "start"
-                            ? 0
-                            : Math.max(0, e.tstamp - local.start)
-                        ).format(`m[m] s[s] SSS[ms]`)}
+                        {e.node.type}
                       </div>
-                      <div>
-                        {e.error && (
-                          <span className="bg-red-600 text-white px-2 mr-2">
-                            ERROR
-                          </span>
-                        )}
-                        {e.node.type} {e.node.name}
+                      <div>{e.node.type !== "start" ? e.node.name : ""}</div>
+                      <div className={cx("text-slate-400 node-type")}>
+                        {e.node.id}
                       </div>
                     </div>
                   </div>
