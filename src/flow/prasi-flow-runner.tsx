@@ -54,8 +54,6 @@ export const PrasiFlowRunner = () => {
               onClick={async () => {
                 if (local.status === "running") return;
                 if (fg.pf) {
-                  console.log(fg.pf);
-
                   local.status = "running";
                   local.start = Date.now();
                   fg.run = null;
