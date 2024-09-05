@@ -21,7 +21,10 @@ export const nodeCondition = defineNode({
     conditions: {
       label: "Conditions",
       type: "array",
-      fields: { condition: { type: "code" }, name: { type: "string" } },
+      fields: {
+        condition: { type: "code", idx: 1 },
+        name: { idx: 0, type: "string" },
+      },
     },
   },
   process: async ({ node, vars, processBranch, next }) => {

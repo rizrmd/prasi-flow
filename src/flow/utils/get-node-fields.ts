@@ -1,7 +1,7 @@
 import { allNodeDefinitions } from "../runtime/nodes";
-import { PFNode, PFNodeDefinition } from "../runtime/types";
+import { PFNodeDefinition } from "../runtime/types";
 
-export const getNodeFields = (node: PFNode) => {
+export const getNodeFields = (node: any) => {
   const data = {} as Record<string, any>;
 
   const def = (allNodeDefinitions as any)[node.type];
@@ -10,6 +10,6 @@ export const getNodeFields = (node: PFNode) => {
     for (const key of Object.keys(def.fields || {})) {
       data[key] = node[key];
     }
-    return { data, definition: def as PFNodeDefinition };
+    return { data, definition: def as PFNodeDefinition<any> };
   }
 };

@@ -3,6 +3,8 @@ import { MoveIcon } from "lucide-react";
 import { fg } from "./flow-global";
 import { Combobox } from "@/components/ui/combobox";
 import { savePF } from "./save-pf";
+import TextareaAutosize from "react-textarea-autosize";
+import { useEffect, useRef } from "react";
 
 export const RenderNode = (arg: {
   id: string;
@@ -11,11 +13,18 @@ export const RenderNode = (arg: {
   const { data, id } = arg;
   const connection = useConnection<Node>();
   const isTarget = connection.inProgress && connection.fromNode.id !== id;
+  const ref = useRef<HTMLTextAreaElement>(null);
 
   const selected = useStore((actions) => ({
     add: actions.addSelectedNodes,
     reset: actions.resetSelectedElements,
   }));
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (ref.current) ref.current.select();
+    });
+  }, [fg.prop?.selection.nodes.find((e) => e.id === id)]);
 
   if (connection.inProgress) {
     fg.pointer_to = connection.to;
@@ -30,7 +39,7 @@ export const RenderNode = (arg: {
         data.type === "start"
           ? undefined
           : cx(
-              "p-1 relative border border-slate-800 rounded-sm pf-node",
+              "p-1 relative overflow-hidden border border-slate-800 rounded-sm pf-node",
               css`
                 min-height: 60px;
                 &:hover {
@@ -73,6 +82,7 @@ export const RenderNode = (arg: {
         if (connection.inProgress && connection.fromNode.id) {
           fg.pointer_up_id = id;
         }
+        ref.current?.select();
       }}
     >
       {!connection.inProgress && (
@@ -97,13 +107,34 @@ export const RenderNode = (arg: {
       {data.type === "start" ? (
         "Start"
       ) : (
-        <div
+        <TextareaAutosize
+          value={node?.name || ""}
+          spellCheck={false}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+          }}
+          ref={ref}
+          onChange={(e) => {
+            if (node) {
+              const value = e.currentTarget.value;
+              node.name = value;
+              fg.main?.render();
+            }
+          }}
+          onKeyDown={(e) => {
+            if (
+              !e.currentTarget.value &&
+              (e.key === "Backspace" || e.key === "Delete")
+            ) {
+              delete fg.pf?.nodes[id];
+              savePF(fg.pf);
+              fg.reload();
+            }
+          }}
           className={cx(
-            "flex flex-1 mt-[22px] text-[14px] items-center flex-col"
+            "flex flex-1 bg-transparent pl-[2px] mt-[26px] outline-none w-full resize-none text-[14px] items-center flex-col"
           )}
-        >
-          {node?.name}
-        </div>
+        ></TextareaAutosize>
       )}
 
       {(!connection.inProgress || isTarget) && data.type !== "start" && (

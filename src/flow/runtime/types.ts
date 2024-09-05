@@ -61,6 +61,7 @@ export type PFNodeDefinition<F extends Record<string, PFField>> = {
 
 export type PFField = (
   | { type: "string" }
+  | { type: "array"; fields: Record<string, PFField> }
   | { type: "code" }
   | {
       type: "options";

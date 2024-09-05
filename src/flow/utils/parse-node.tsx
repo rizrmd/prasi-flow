@@ -57,16 +57,19 @@ export const parseNodes = (
 
     const branching = (allNodeDefinitions as any)[inode.type]?.branching;
     if (branching) {
-      if (inode.unused_branches && !inode.branches) {
-        inode.branches = inode.unused_branches;
-        delete inode.unused_branches;
-        const idx = flow.findIndex((e) => e === inode.id);
-        if (idx !== flow.length - 1) {
-          flow.splice(idx + 1, flow.length - idx - 1);
-          flow_nodes.splice(idx + 1, flow_nodes.length - idx - 1);
+      if (!inode.branches) {
+        if (inode.unused_branches) {
+          inode.branches = inode.unused_branches;
+          delete inode.unused_branches;
+          const idx = flow.findIndex((e) => e === inode.id);
+          if (idx !== flow.length - 1) {
+            flow.splice(idx + 1, flow.length - idx - 1);
+            flow_nodes.splice(idx + 1, flow_nodes.length - idx - 1);
+          }
+        } else {
+          inode.branches = [];
         }
       }
-
       branching({ node: inode, flow, nodes });
     } else {
       if (inode.branches) {
@@ -101,6 +104,10 @@ export const parseNodes = (
 
           if (node.id === branch.flow[0]) {
             continue;
+          }
+
+          if (node.id === "q0xfupwinyi439v8pqaght0a") {
+            console.log(node, branch);
           }
 
           rf_edges.push({

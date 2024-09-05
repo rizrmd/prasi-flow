@@ -69,6 +69,14 @@ export function PrasiFlow() {
       }
 
       savePF(local.pf);
+
+      const ival = setInterval(() => {
+        const ref = local.reactflow;
+        if (ref) {
+          ref.fitView();
+          clearInterval(ival);
+        }
+      }, 10);
     }
   }, []);
 
@@ -140,6 +148,13 @@ export function PrasiFlow() {
     setNodes(parsed.nodes);
     setEdges(parsed.edges);
     savePF(local.pf);
+
+    if (to) {
+      setTimeout(() => {
+        fg.main?.action.resetSelectedElements();
+        fg.main?.action.addSelectedNodes([to]);
+      }, 200);
+    }
   };
 
   fg.pf = local.pf;
@@ -195,22 +210,12 @@ export function PrasiFlow() {
         `
       )}
     >
-      {/* <div className="absolute top-0 left-0 p-2 bg-white">
-        {JSON.stringify(
-          nodes.map((e) => ({
-            s: e.sourcePosition,
-            t: e.targetPosition,
-            x: e.position.x,
-            y: e.position.y,
-          }))
-        )}
-      </div> */}
       <ReactFlow
         maxZoom={1.1}
-        fitView
         onInit={(ref) => {
           local.reactflow = ref;
         }}
+        fitView
         nodeTypes={local.nodeTypes}
         edgeTypes={local.edgeTypes}
         onSelectionChange={(changes) => {
@@ -227,6 +232,7 @@ export function PrasiFlow() {
             for (const c of changes) {
               if (c.type === "position") {
                 pf.nodes[c.id].position = c.position;
+                should_save = true;
               } else if (c.type === "remove") {
                 should_save = true;
                 const node = pf.nodes[c.id];
@@ -300,8 +306,7 @@ export function PrasiFlow() {
               }
             }
             if (should_save) {
-              savePF(pf);
-              fg.reload();
+              savePF(pf, { then: fg.reload });
 
               if (select_id) {
                 setTimeout(() => {
@@ -368,23 +373,37 @@ export function PrasiFlow() {
                   if (edge) {
                     for (const flow of Object.values(pf.flow)) {
                       let should_break = false;
-                      loopPFNode(pf.nodes, flow, ({ flow, idx, parent }) => {
-                        if (flow.includes(edge.target)) {
-                          if (
-                            flow[idx - 1] === edge.source ||
-                            parent?.id === edge.source
-                          ) {
-                            const res = flow.splice(idx, flow.length - idx);
-                            if (res.length > 0) {
-                              pf.flow[res[0]] = res;
+                      loopPFNode(
+                        pf.nodes,
+                        flow,
+                        ({ flow, idx, parent, is_invalid }) => {
+                          if (is_invalid) {
+                            for (const [k, v] of Object.entries(pf.flow)) {
+                              if (flow === v) {
+                                delete pf.flow[k];
+                              }
                             }
                             should_break = true;
                             return false;
                           }
-                        }
 
-                        return true;
-                      });
+                          if (flow.includes(edge.target)) {
+                            if (
+                              flow[idx - 1] === edge.source ||
+                              parent?.id === edge.source
+                            ) {
+                              const res = flow.splice(idx, flow.length - idx);
+                              if (res.length > 0) {
+                                pf.flow[res[0]] = res;
+                              }
+                              should_break = true;
+                              return false;
+                            }
+                          }
+
+                          return true;
+                        }
+                      );
                       if (should_break) {
                         savePF(local.pf);
                         setTimeout(() => {
@@ -416,10 +435,28 @@ export function PrasiFlow() {
             if (fg.pointer_up_id) {
               to_id = fg.pointer_up_id;
               fg.pointer_up_id = "";
-            } else {
+            } else if (local.pf) {
               const found = edges.find((e) => e.source === from_id);
-              if (!found && local.pf) {
-                const f = findFlow({ id: from_id, pf: local.pf });
+              const f = findFlow({ id: from_id, pf: local.pf });
+
+              if (found) {
+                const new_node = {
+                  type: "code",
+                  id: createId(),
+                  position: fg.pointer_to as any,
+                };
+                local.pf.nodes[new_node.id] = new_node;
+                to_id = new_node.id;
+                if (f) {
+                  const new_flow = f.flow.splice(
+                    f.idx + 1,
+                    f.flow.length - f.idx - 1
+                  );
+                  if (new_flow.length > 0) {
+                    local.pf.flow[new_flow[0]] = new_flow;
+                  }
+                }
+              } else {
                 if (f.idx >= 0 && from) {
                   const position = fg.pointer_to || {
                     x: from.position.x,
@@ -467,10 +504,12 @@ export function PrasiFlow() {
                   );
 
                   if (!picked_branches) {
-                    const spare = from_node.branches[0].flow;
-                    from_node.branches[0].flow = [];
-                    pf.flow[spare[0]] = spare;
-                    picked_branches = from_node.branches[0];
+                    const spare = from_node?.branches?.[0]?.flow;
+                    if (spare) {
+                      from_node.branches[0].flow = [];
+                      pf.flow[spare[0]] = spare;
+                      picked_branches = from_node.branches[0];
+                    }
                   }
 
                   if (picked_branches) {
@@ -478,7 +517,8 @@ export function PrasiFlow() {
                   }
                 } else {
                   const found = findFlow({ id: from_node.id, pf });
-                  if (found && !found.flow.includes(to_id)) {
+
+                  if (found && found.flow[found.idx + 1] !== to_id) {
                     connectTo(pf, from_id, to_id, found.flow);
                   }
                 }

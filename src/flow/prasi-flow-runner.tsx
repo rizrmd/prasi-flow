@@ -183,8 +183,11 @@ export const PrasiFlowRunner = () => {
                     e.error ? "bg-red-100" : "bg-slate-100"
                   )}
                   onClick={() => {
-                    fg.main?.action.resetSelectedElements();
-                    fg.main?.action.addSelectedNodes([e.node.id]);
+                    const rf_node = fg.prop?.selection.nodes[0];
+                    if (rf_node?.id !== e.node.id) {
+                      fg.main?.action.resetSelectedElements();
+                      fg.main?.action.addSelectedNodes([e.node.id]);
+                    }
                   }}
                 >
                   <div
@@ -206,7 +209,7 @@ export const PrasiFlowRunner = () => {
                           : Math.max(0, e.tstamp - local.start)
                       ).format(`m[m] s[s] SSS[ms]`)}
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-2 flex-1">
                       {e.error && (
                         <span className="bg-red-600 text-white px-2 mr-2">
                           ERROR
@@ -219,8 +222,8 @@ export const PrasiFlowRunner = () => {
                       >
                         {e.node.type}
                       </div>
-                      <div>{e.node.type !== "start" ? e.node.name : ""}</div>
-                      <div className={cx("text-slate-400 node-type")}>
+                      <div className="flex-1">{e.node.type !== "start" ? e.node.name : ""}</div>
+                      <div className={cx("text-slate-400 node-type pr-2")}>
                         {e.node.id}
                       </div>
                     </div>
