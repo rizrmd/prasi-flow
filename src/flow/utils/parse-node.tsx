@@ -1,5 +1,6 @@
 import { Edge, Node, Position } from "@xyflow/react";
 import { PFNode, PFNodeID } from "../runtime/types";
+import { allNodeDefinitions } from "../runtime/nodes";
 
 export const EdgeType = "default";
 export const parseNodes = (
@@ -19,7 +20,7 @@ export const parseNodes = (
   const rf_nodes: Node[] = existing ? existing.rf_nodes : [];
   const rf_edges: Edge[] = existing ? existing.rf_edges : [];
 
-  const flow_mapped: PFNode[] = [];
+  let flow_mapped: PFNode[] = [];
   for (let i = 0; i < flow.length; i++) {
     const id = flow[i];
 
@@ -31,7 +32,7 @@ export const parseNodes = (
     }
   }
 
-  const flow_nodes = [...flow_mapped, ...(existing?.next_flow || [])];
+  let flow_nodes = [...flow_mapped, ...(existing?.next_flow || [])];
   let prev = null as null | Node;
   let y = 0;
 
@@ -45,16 +46,7 @@ export const parseNodes = (
       targetPosition: Position.Top,
       data: {
         type: inode.type,
-        label:
-          inode.type === "start" ? (
-            "Start"
-          ) : (
-            <>
-              [{inode.type}] {inode.name}
-              <br />
-              <small>{inode.id}</small>
-            </>
-          ),
+        label: inode.type === "start" ? "Start" : inode.name,
       },
       position: inode.position || {
         x: (existing?.x || 0) * 200,
@@ -62,6 +54,38 @@ export const parseNodes = (
       },
     };
     y++;
+
+    const branching = (allNodeDefinitions as any)[inode.type]?.branching;
+    if (branching) {
+      if (inode.unused_branches && !inode.branches) {
+        inode.branches = inode.unused_branches;
+        delete inode.unused_branches;
+        const idx = flow.findIndex((e) => e === inode.id);
+        if (idx !== flow.length - 1) {
+          flow.splice(idx + 1, flow.length - idx - 1);
+          flow_nodes.splice(idx + 1, flow_nodes.length - idx - 1);
+        }
+      }
+
+      branching({ node: inode, flow, nodes });
+    } else {
+      if (inode.branches) {
+        const non_empty_flow =
+          inode.branches.find((e) => e.flow.length > 0)?.flow || [];
+        inode.unused_branches = inode.branches;
+        delete inode.branches;
+        const fidx = flow_mapped.findIndex((e) => e.id === inode.id);
+        const idx = flow.findIndex((id) => id === inode.id);
+        let i = 1;
+        for (const id of non_empty_flow) {
+          if (id !== inode.id) {
+            flow.splice(idx + i, 0, id);
+            flow_mapped.splice(fidx + i, 0, nodes[id]);
+            i++;
+          }
+        }
+      }
+    }
 
     if (inode.branches) {
       let i = 0;
@@ -84,7 +108,7 @@ export const parseNodes = (
             source: node.id,
             target: branch.flow[0],
             type: EdgeType,
-            label: branch.name,
+            data: { branch },
             animated: true,
           });
           parseNodes(nodes, branch.flow, {
@@ -116,7 +140,6 @@ export const parseNodes = (
 
     prev = node;
     rf_nodes.push(node);
-
     if (inode.branches) {
       break;
     }

@@ -25,15 +25,16 @@ const TooltipContent = React.forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-const Tooltip: React.FC<{ content: any; children: any }> = ({
-  children,
-  content,
-}) => {
+const Tooltip: React.FC<{
+  content: any;
+  children: any;
+  placement?: "top" | "right" | "bottom" | "left" | undefined;
+}> = ({ children, content, placement }) => {
   return (
     <TooltipProvider>
       <TooltipRoot>
         <TooltipTrigger>{children}</TooltipTrigger>
-        <TooltipContent>{content}</TooltipContent>
+        <TooltipContent side={placement}>{content}</TooltipContent>
       </TooltipRoot>
     </TooltipProvider>
   );

@@ -2,7 +2,12 @@ import { allNodeDefinitions } from "./nodes";
 
 export type PFNodeID = string;
 
-export type PFNodeBranch = { code?: string; name?: string; flow: PFNodeID[] };
+export type PFNodeBranch = {
+  code?: string;
+  name?: string;
+  flow: PFNodeID[];
+  idx?: number;
+};
 
 export type PFNodePosition = { x: number; y: number };
 
@@ -15,6 +20,7 @@ export type PFNode = Record<string, any> & {
   vars?: Record<string, any>;
   branches?: PFNodeBranch[];
   position?: PFNodePosition;
+  unused_branches?: PFNodeBranch[];
 };
 
 export type PF = {
@@ -39,9 +45,10 @@ export type PFNodeDefinition<F extends Record<string, PFField>> = {
   type: string;
   vars?: Record<string, any>;
   branching?: (arg: {
-    vars: Record<string, any>;
-    node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;
-  }) => PFNodeBranch[];
+    node: PFNode;
+    flow: PFNodeID[];
+    nodes: Record<string, PFNode>;
+  }) => void;
   process: (arg: {
     vars: Record<string, any>;
     node: PFNodeRuntime<{ [K in keyof F]: F[K] }>;

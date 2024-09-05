@@ -1,12 +1,13 @@
 import { createId } from "@paralleldrive/cuid2";
 import {
   BaseEdge,
+  Edge,
   EdgeComponentProps,
   EdgeLabelRenderer,
   getBezierPath,
   useReactFlow,
 } from "@xyflow/react";
-import { PFNode } from "../runtime/types";
+import { PFNode, PFNodeBranch } from "../runtime/types";
 import { findFlow } from "./find-node";
 import { fg } from "./flow-global";
 import { savePF } from "./save-pf";
@@ -20,7 +21,6 @@ export const RenderEdge = ({
   sourcePosition,
   targetPosition,
   style = {},
-  label,
   markerEnd,
 }: EdgeComponentProps) => {
   const { getEdge } = useReactFlow();
@@ -33,6 +33,10 @@ export const RenderEdge = ({
     targetPosition,
   });
 
+  const edge = (id ? getEdge(id) : undefined) as unknown as Edge<{
+    branch: PFNodeBranch;
+  }>;
+  const label = edge?.data?.branch?.name || "";
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />

@@ -3,11 +3,23 @@ import { defineNode } from "../lib/define-node";
 
 export const nodeCondition = defineNode({
   type: "condition",
-  branching(arg) {
-    return [];
+  branching({ node }) {
+    if (!node.branches) {
+      node.branches = [];
+    }
+    if (node.branches) {
+      let i = 0;
+      for (const branch of node.branches) {
+        if (typeof branch.idx === "undefined") {
+          branch.idx = i;
+        }
+        i++;
+      }
+    }
   },
   fields: {
     conditions: {
+      label: "Conditions",
       type: "array",
       fields: { condition: { type: "code" }, name: { type: "string" } },
     },

@@ -26,11 +26,11 @@ export const PrasiFlowRunner = () => {
           .btn {
             cursor: pointer;
             border: 1px solid #ddd;
-            padding: 4px;
+            padding: 5px;
             border-radius: 3px;
             svg {
-              width: 12px;
-              height: 12px;
+              width: 14px;
+              height: 14px;
             }
             &:hover {
               background: #e0efff;
@@ -40,8 +40,8 @@ export const PrasiFlowRunner = () => {
         `
       )}
     >
-      <div className="border-b min-h-8 text-sm px-2 flex justify-between items-stretch space-x-1">
-        <div className="flex items-center space-x-1">
+      <div className="border-b h-[40px] text-sm px-2 flex justify-between items-stretch space-x-1">
+        <div className="flex items-center space-x-[5px]">
           <Tooltip content={"Run Flow"}>
             <div
               className={cx(
@@ -116,7 +116,7 @@ export const PrasiFlowRunner = () => {
           </Tooltip>
 
           <label className="border text-xs flex items-stretch rounded-sm">
-            <div className="bg-slate-100 px-1 flex items-center rounded-l-sm">
+            <div className="bg-slate-100 px-2 flex items-center rounded-l-sm">
               Delay
             </div>
             <input
@@ -125,8 +125,8 @@ export const PrasiFlowRunner = () => {
               className={cx(
                 "px-1 outline-none",
                 css`
-                  padding-top: 2px;
-                  padding-bottom: 2px;
+                  padding-top: 5px;
+                  padding-bottom: 4px;
                   width: 40px;
                 `
               )}
