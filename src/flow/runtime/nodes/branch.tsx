@@ -1,8 +1,8 @@
 import { codeExec } from "../lib/code-exec";
 import { defineNode } from "../lib/define-node";
 
-export const nodeSplit = defineNode({
-  type: "split",
+export const nodeBranch = defineNode({
+  type: "branch",
   branching({ node }) {
     if (!node.branches) {
       node.branches = [];
