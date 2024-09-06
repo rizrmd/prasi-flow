@@ -1,11 +1,13 @@
-import { Handle, Position, useConnection, useStore, Node } from "@xyflow/react";
-import { MoveIcon } from "lucide-react";
-import { fg } from "./flow-global";
 import { Combobox } from "@/components/ui/combobox";
-import { savePF } from "./save-pf";
-import TextareaAutosize from "react-textarea-autosize";
+import { Handle, Node, Position, useConnection, useStore } from "@xyflow/react";
+import capitalize from "lodash.capitalize";
+import { Unplug } from "lucide-react";
 import { useEffect, useRef } from "react";
-
+import TextareaAutosize from "react-textarea-autosize";
+import { allNodeDefinitions } from "../runtime/nodes";
+import { PFNodeDefinition } from "../runtime/types";
+import { fg } from "./flow-global";
+import { savePF } from "./save-pf";
 export const RenderNode = (arg: {
   id: string;
   data: { label: string; type: string };
@@ -13,16 +15,17 @@ export const RenderNode = (arg: {
   const { data, id } = arg;
   const connection = useConnection<Node>();
   const isTarget = connection.inProgress && connection.fromNode.id !== id;
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref_name = useRef<HTMLTextAreaElement>(null);
+  const ref_node = useRef<HTMLDivElement>(null);
 
-  const selected = useStore((actions) => ({
+  const selection = useStore((actions) => ({
     add: actions.addSelectedNodes,
     reset: actions.resetSelectedElements,
   }));
 
   useEffect(() => {
     setTimeout(() => {
-      if (ref.current) ref.current.select();
+      if (ref_name.current) ref_name.current.select();
     });
   }, [fg.prop?.selection.nodes.find((e) => e.id === id)]);
 
@@ -32,169 +35,224 @@ export const RenderNode = (arg: {
 
   const pf = fg.pf;
   const node = pf?.nodes[id];
+  const def: PFNodeDefinition<any> = node
+    ? (allNodeDefinitions as any)[node.type]
+    : undefined;
 
+  const left = data.type === "start" ? 38 : 74;
   return (
     <div
-      className={
-        data.type === "start"
-          ? undefined
-          : cx(
-              "p-1 relative overflow-hidden border border-slate-800 rounded-sm pf-node",
-              css`
-                min-height: 60px;
-                &:hover {
-                  .move {
-                    opacity: 1;
-                  }
-                }
-              `,
-              fg.node_running.length > 0 &&
-                css`
-                  .node-type {
-                    color: black;
-                  }
-                `,
+      ref={ref_node}
+      className={cx(
+        "border border-slate-600 rounded-sm relative",
+        def?.className,
+        css`
+          .source-edge svg {
+            opacity: 0;
+          }
+          &:hover {
+            .source-edge svg {
+              opacity: 1;
+            }
+          }
+        `,
+        fg.prop?.selection.nodes?.find((e) => e.id === id) &&
+          css`
+            border: 1px solid blue;
+            outline: 1px solid blue;
+          `,
+        fg.node_running.length > 0 &&
+          css`
+            .node-type {
+              color: black;
+            }
+          `,
 
-              fg.run?.visited?.find((e) => e.node.id === arg.id) &&
-                css`
-                  background: #f3ffef;
-                  border: 1px solid #175203;
-                `,
-              fg.node_running.includes(arg.id) &&
-                (fg.node_running[fg.node_running.length - 1] === id ||
-                !fg.pf!.nodes[arg.id].branches
-                  ? css`
-                      color: white;
-                      background: #419625;
-                      border: 1px solid #419625;
-                    `
-                  : css`
-                      background: #f8f5d5;
-                      border: 1px solid #91860c;
-                    `)
-            )
-      }
-      onPointerDown={() => {
-        selected.reset();
-        selected.add([id]);
-      }}
-      onPointerUp={() => {
-        if (connection.inProgress && connection.fromNode.id) {
-          fg.pointer_up_id = id;
-        }
-        ref.current?.select();
-      }}
+        fg.node_running.includes(arg.id) &&
+          (fg.node_running[fg.node_running.length - 1] === id ||
+          !fg.pf!.nodes[arg.id].branches
+            ? css`
+                color: white;
+                background: #419625 !important;
+                border: 1px solid #419625;
+              `
+            : css`
+                background: #f8f5d5 !important;
+                border: 1px solid #91860c;
+              `),
+
+        fg.run?.visited?.find((e) => e.node.id === arg.id) &&
+          css`
+            background: #f3ffef;
+            border: 1px solid #175203;
+          `
+      )}
+      // onPointerDown={() => {
+      //   selection.reset();
+      //   selection.add([id]);
+      // }}
+      // onPointerUp={() => {
+      //   if (connection.inProgress && connection.fromNode.id) {
+      //     fg.pointer_up_id = id;
+      //   }
+      //   ref_name.current?.select();
+      // }}
     >
-      {!connection.inProgress && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className={cx(
+          "source-edge",
+          css`
+            border-radius: 0;
+            border: 1px solid transparent;
+            background: none;
+            &:after {
+              content: "";
+              position: absolute;
+              width: 25px;
+              height: 25px;
+              transform: none;
+              top: -25px;
+              left: ${left}px;
+              border-radius: 3px;
+              border: 1px dashed transparent;
+            }
+
+            &:hover {
+              border: 1px solid black;
+              background: black;
+
+              &:after {
+                border: 1px dashed black;
+              }
+            }
+          `
+        )}
+      >
+        <div
           className={cx(
+            "flex items-center justify-center",
             css`
               position: absolute;
-              width: 100%;
-              height: 100%;
               transform: none;
-              top: 0;
-              left: 0;
-              border-radius: 0;
-              border: 0;
-              background: none;
+              top: -25px;
+              left: ${left}px;
+              width: 25px;
+              height: 25px;
+              border: 1px solid transparent;
             `
           )}
-        />
-      )}
-      {data.type === "start" ? (
-        "Start"
-      ) : (
-        <TextareaAutosize
-          value={node?.name || ""}
-          spellCheck={false}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-          }}
-          ref={ref}
-          onChange={(e) => {
-            if (node) {
-              const value = e.currentTarget.value;
-              node.name = value;
-              fg.main?.render();
-            }
-          }}
-          onKeyDown={(e) => {
-            if (
-              !e.currentTarget.value &&
-              (e.key === "Backspace" || e.key === "Delete")
-            ) {
-              delete fg.pf?.nodes[id];
-              savePF(fg.pf);
-              fg.reload();
-            }
-          }}
+        >
+          <Unplug size={14} />
+        </div>
+      </Handle>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className={cx("relative opacity-0")}
+      />
+      {node && def && (
+        <div
           className={cx(
-            "flex flex-1 bg-transparent pl-[2px] mt-[26px] outline-none w-full resize-none text-[14px] items-center flex-col"
+            "flex flex-col items-stretch",
+            data.type !== "start" ? "min-w-[137px] " : "min-w-[65px] "
           )}
-        ></TextareaAutosize>
-      )}
-
-      {(!connection.inProgress || isTarget) && data.type !== "start" && (
-        <Handle type="target" position={Position.Top} />
-      )}
-
-      {data.type !== "start" && (
-        <>
-          <Combobox
-            options={[
-              { value: "code", label: "Code" },
-              { value: "condition", label: "Condition" },
-            ]}
-            defaultValue={data.type}
-            onChange={(value) => {
-              data.type = value;
-              const pf = fg.pf;
-              if (pf) {
-                const node = pf.nodes[id];
-                node.type = value;
-                fg.reload();
-
-                setTimeout(() => {
-                  fg.reload();
-                  savePF(pf);
-                });
-              }
-            }}
-            className={css`
-              * {
-                font-size: 13px !important;
-              }
-            `}
-          >
-            {({ setOpen }) => (
-              <div
-                onClickCapture={(e) => {
-                  e.stopPropagation();
-                  setOpen(true);
-                }}
-                className={cx("absolute z-10 top-[6px] left-[6px]")}
-              >
-                <div
-                  className={cx(
-                    "border hover:bg-blue-500 hover:border-blue-500 hover:text-white px-1 py-0 uppercase border-slate-500 bg-white text-[11px] rounded-xs node-type"
-                  )}
-                >
-                  {data.type}
-                </div>
-              </div>
-            )}
-          </Combobox>
+        >
           <div
             className={cx(
-              "move transition-all opacity-20 p-2 absolute top-0 right-0"
+              "line-type flex items-center pl-2 ",
+              !node.name && "justify-center pr-2",
+              css`
+                svg {
+                  width: 14px;
+                  height: 14px;
+                }
+              `
             )}
           >
-            <MoveIcon size={12} />
+            <Combobox
+              options={Object.keys(allNodeDefinitions)
+                .filter((e) => e !== "start")
+                .map((e) => {
+                  return { value: e, label: capitalize(e) };
+                })}
+              defaultValue={data.type}
+              onChange={(value) => {
+                data.type = value;
+                const pf = fg.pf;
+                if (pf) {
+                  const node = pf.nodes[id];
+                  node.type = value;
+                  fg.reload();
+
+                  setTimeout(() => {
+                    fg.reload();
+                    savePF(pf);
+                    setTimeout(() => {
+                      selection.add([id]);
+                    });
+                  });
+                }
+              }}
+              className={css`
+                * {
+                  font-size: 13px !important;
+                }
+              `}
+            >
+              {({ setOpen }) => (
+                <div
+                  className="flex items-center py-1 space-x-1"
+                  onClickCapture={(e) => {
+                    e.stopPropagation();
+                    setOpen(true);
+                  }}
+                >
+                  <div dangerouslySetInnerHTML={{ __html: def.icon }}></div>
+                  <div className="capitalize">{def.type}</div>
+                </div>
+              )}
+            </Combobox>
           </div>
-        </>
+          {node.name && data.type !== "start" && (
+            <div
+              className={cx(
+                "flex items-center py-1 px-2 border-t border-t-slate-500"
+              )}
+            >
+              <TextareaAutosize
+                value={node.name}
+                spellCheck={false}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                }}
+                rows={1}
+                ref={ref_name}
+                onChange={(e) => {
+                  if (node) {
+                    const value = e.currentTarget.value;
+                    node.name = value;
+                    fg.main?.render();
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (
+                    !e.currentTarget.value &&
+                    (e.key === "Backspace" || e.key === "Delete")
+                  ) {
+                    delete fg.pf?.nodes[id];
+                    savePF(fg.pf);
+                    fg.reload();
+                  }
+                }}
+                className={cx(
+                  "flex flex-1 bg-transparent min-w-0 w-0 outline-none resize-none text-[15px] items-center flex-col"
+                )}
+              ></TextareaAutosize>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

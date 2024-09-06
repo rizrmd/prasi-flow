@@ -1,10 +1,10 @@
 import { nodeCode } from "./nodes/code";
-import { nodeCondition } from "./nodes/condition";
+import { nodeSplit } from "./nodes/split";
 import { nodeStart } from "./nodes/start";
 
 export const allNodeDefinitions = {
   start: nodeStart,
   code: nodeCode,
-  condition: nodeCondition,
+  split: nodeSplit,
 };
 export type PRASI_NODE_DEFS = typeof allNodeDefinitions;

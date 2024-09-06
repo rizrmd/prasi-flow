@@ -20,7 +20,7 @@ for (let i = 0; i <4;i++){
     },
     [c]: {
       name: "c",
-      type: "condition",
+      type: "split",
       conditions: [{ condition: "", name: "Branch 1" }],
       branches: [
         {
@@ -36,7 +36,7 @@ for (let i = 0; i <4;i++){
     [d]: { name: "d", type: "code", source_code: `console.log("log d")` },
     [e]: {
       name: "e",
-      type: "condition",
+      type: "split",
       branches: [
         {
           name: "Branch 3",

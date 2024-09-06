@@ -5,8 +5,8 @@ export const nodeWidth = 250;
 const nodeHeight = 64;
 
 export const getSize = (node: Node) => {
-  if (node.data.type === "start") {
-    return { w: 160, h: 20 };
+  if (node.measured) {
+    return { w: node.measured.width || 0, h: node.measured.height || 0 };
   }
   return { w: nodeWidth, h: nodeHeight };
 };

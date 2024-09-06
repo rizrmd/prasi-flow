@@ -169,18 +169,9 @@ export function PrasiFlow() {
 
           .react-flow__node {
             cursor: pointer;
-            border: 0px;
-
-            &.start {
-              border: 1px solid green;
-              width: 60px;
-              height: 20px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border-radius: 9px;
-              background-color: #edffed;
-            }
+            border: 0px !important;
+            box-shadow: none !important;
+            width: auto;
 
             &.selected > .pf-node {
               outline: 1px solid blue;
@@ -306,14 +297,17 @@ export function PrasiFlow() {
               }
             }
             if (should_save) {
-              savePF(pf, { then: fg.reload });
-
-              if (select_id) {
-                setTimeout(() => {
-                  fg.main?.action.resetSelectedElements();
-                  fg.main?.action.addSelectedNodes([select_id]);
-                }, 200);
-              }
+              savePF(pf, {
+                then: () => {
+                  if (select_id) {
+                    fg.reload();
+                    setTimeout(() => {
+                      fg.main?.action.resetSelectedElements();
+                      fg.main?.action.addSelectedNodes([select_id]);
+                    }, 200);
+                  }
+                },
+              });
             }
           }
           return onNodesChange(changes);
@@ -442,6 +436,7 @@ export function PrasiFlow() {
               if (found) {
                 const new_node = {
                   type: "code",
+                  name: "New Node",
                   id: createId(),
                   position: fg.pointer_to as any,
                 };
@@ -465,6 +460,7 @@ export function PrasiFlow() {
                   position.x -= 70;
                   fg.pointer_to = null;
                   const new_node = {
+                    name: "New Node",
                     type: "code",
                     id: createId(),
                     position,

@@ -1,9 +1,8 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -27,7 +26,7 @@ export function Combobox({
   className,
 }: {
   className?: string;
-  options: { value: string; label: string }[];
+  options: ({ value: string; label: string } | string)[];
   onChange: (value: string) => void;
   defaultValue: string;
   children: (opt: { setOpen: (open: boolean) => void }) => React.ReactElement;
@@ -35,6 +34,10 @@ export function Combobox({
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(defaultValue);
 
+  const _options = options.map((e) => {
+    if (typeof e === "string") return { label: e, value: e };
+    return e;
+  });
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children({ setOpen })}</PopoverTrigger>
@@ -53,7 +56,7 @@ export function Combobox({
           <CommandList>
             <CommandEmpty>No Option found.</CommandEmpty>
             <CommandGroup>
-              {options.map((item) => (
+              {_options.map((item) => (
                 <CommandItem
                   key={item.value}
                   value={item.value}

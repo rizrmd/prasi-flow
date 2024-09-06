@@ -108,7 +108,7 @@ export const PrasiFlowField: FC<{
                   <div className="num select-none flex items-center justify-center w-[15px] border-r border-b bg-slate-100 text-[9px]">
                     {idx + 1}
                   </div>
-                  <div className="flex flex-col ">
+                  <div className="flex flex-col flex-1 ">
                     {Object.entries(field.fields)
                       .sort((a, b) => a[1].idx - b[1].idx)
                       .map(([key, field]) => {

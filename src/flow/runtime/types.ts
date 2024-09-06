@@ -43,7 +43,9 @@ export type PFRuntime = {
 
 export type PFNodeDefinition<F extends Record<string, PFField>> = {
   type: string;
+  className?: string;
   vars?: Record<string, any>;
+  icon: string;
   branching?: (arg: {
     node: PFNode;
     flow: PFNodeID[];
