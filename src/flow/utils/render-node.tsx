@@ -2,7 +2,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { Handle, Node, Position, useConnection, useStore } from "@xyflow/react";
 import capitalize from "lodash.capitalize";
 import { Unplug } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { allNodeDefinitions } from "../runtime/nodes";
 import { PFNodeDefinition } from "../runtime/types";
@@ -175,7 +175,40 @@ export const RenderNode = (arg: {
               options={Object.keys(allNodeDefinitions)
                 .filter((e) => e !== "start")
                 .map((e) => {
-                  return { value: e, label: capitalize(e) };
+                  const def = (allNodeDefinitions as any)[
+                    e
+                  ] as PFNodeDefinition<any>;
+                  return {
+                    value: e,
+                    label: e,
+                    el: (
+                      <>
+                        <div
+                          className={css`
+                            svg {
+                              width: 12px;
+                              height: 12px;
+                              margin-right: 5px;
+                            }
+                          `}
+                          dangerouslySetInnerHTML={{ __html: def.icon }}
+                        ></div>
+
+                        {def.type.split(".").map((e, idx) => (
+                          <div key={idx} className="flex space-x-1 ml-1">
+                            {idx > 0 && <div> &bull; </div>}
+                            <div
+                              className={
+                                e.length > 2 ? "capitalize" : "uppercase"
+                              }
+                            >
+                              {e}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    ),
+                  };
                 })}
               defaultValue={data.type}
               onChange={(value) => {
@@ -206,11 +239,25 @@ export const RenderNode = (arg: {
                   className="flex items-center py-1 space-x-1"
                   onClickCapture={(e) => {
                     e.stopPropagation();
-                    setOpen(true);
+                    selection.add([id]);
+                    setTimeout(() => {
+                      setOpen(true);
+                    }, 100);
                   }}
                 >
                   <div dangerouslySetInnerHTML={{ __html: def.icon }}></div>
-                  <div className="capitalize">{def.type}</div>
+                  <div className="flex space-x-1">
+                    {def.type.split(".").map((e, idx) => (
+                      <Fragment key={idx}>
+                        {idx > 0 && <div> &bull; </div>}
+                        <div
+                          className={e.length > 2 ? "capitalize" : "uppercase"}
+                        >
+                          {e}
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
                 </div>
               )}
             </Combobox>

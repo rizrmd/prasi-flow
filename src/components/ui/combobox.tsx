@@ -26,7 +26,10 @@ export function Combobox({
   className,
 }: {
   className?: string;
-  options: ({ value: string; label: string } | string)[];
+  options: (
+    | { value: string; label: string; el?: React.ReactElement }
+    | string
+  )[];
   onChange: (value: string) => void;
   defaultValue: string;
   children: (opt: { setOpen: (open: boolean) => void }) => React.ReactElement;
@@ -74,7 +77,7 @@ export function Combobox({
                       value === item.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {item.label}
+                  {item.el || item.label}
                 </CommandItem>
               ))}
             </CommandGroup>

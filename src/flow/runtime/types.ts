@@ -1,3 +1,4 @@
+import { ReactElement } from "react";
 import { allNodeDefinitions } from "./nodes";
 
 export type PFNodeID = string;
@@ -63,10 +64,21 @@ export type PFNodeDefinition<F extends Record<string, PFField>> = {
 
 export type PFField = (
   | { type: "string" }
-  | { type: "array"; fields: Record<string, PFField> }
+  | {
+      type: "array";
+      fields: Record<string, PFField>;
+      render: (arg: { node: PFNode; save: () => void }) => ReactElement;
+      add?: {
+        checkbox: () => { label: string; value: any }[];
+        onChange: (checked: any[]) => void;
+      };
+    }
   | { type: "code" }
   | {
-      type: "options";
-      options: (string | { value: string; label: string })[];
+      type: "options" | "buttons";
+      multiple?: boolean;
+      options: () => Promise<
+        (string | { value: string; label: string; el?: ReactElement })[]
+      >;
     }
 ) & { idx: number; label: string; optional?: boolean; className?: string };

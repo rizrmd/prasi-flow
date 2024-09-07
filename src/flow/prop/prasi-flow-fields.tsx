@@ -40,10 +40,16 @@ export const PrasiFlowFields: FC<{ node: PFNode }> = ({ node }) => {
         .sort((a, b) => a[1].idx - b[1].idx)
         .map(([key, item]) => {
           return (
-            <PrasiFlowField key={key} field={item} name={key} node={node} />
+            <PrasiFlowField
+              key={key}
+              field={item}
+              name={key}
+              node={node}
+              value={node[key]}
+            />
           );
         })}
-      {/* <pre className={cx("text-[9px]")}>{JSON.stringify(node, null, 2)}</pre> */}
+      <pre className={cx("text-[9px]")}>{JSON.stringify(node, null, 2)}</pre>
     </>
   );
 };
