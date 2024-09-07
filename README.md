@@ -1,13 +1,11 @@
-# Farm + React
-
-This template should help you start developing using React and TypeScript in Farm.
+# Rsbuild Project
 
 ## Setup
 
 Install the dependencies:
 
 ```bash
-bun install
+pnpm install
 ```
 
 ## Get Started
@@ -15,23 +13,17 @@ bun install
 Start the dev server:
 
 ```bash
-bun start
+pnpm dev
 ```
 
 Build the app for production:
 
 ```bash
-bun build
+pnpm build
 ```
 
-Preview the Production build product:
+Preview the production build locally:
 
 ```bash
-bun preview
-```
-
-Clear persistent cache local files
-
-```bash
-bun clean
+pnpm preview
 ```

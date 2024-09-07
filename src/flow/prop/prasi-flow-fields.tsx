@@ -27,6 +27,11 @@ export const PrasiFlowFields: FC<{ node: PFNode }> = ({ node }) => {
           fg.reload();
           savePF(pf);
           fg.main?.render();
+
+          setTimeout(() => {
+            fg.main?.action.resetSelectedElements();
+            fg.main?.action.addSelectedNodes([node.id]);
+          });
         }}
       />
       <div className="text-xs text-slate-400 p-1 border-b">ID: {node.id}</div>

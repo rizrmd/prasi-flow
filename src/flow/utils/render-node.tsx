@@ -91,12 +91,12 @@ export const RenderNode = (arg: {
       //   selection.reset();
       //   selection.add([id]);
       // }}
-      // onPointerUp={() => {
-      //   if (connection.inProgress && connection.fromNode.id) {
-      //     fg.pointer_up_id = id;
-      //   }
-      //   ref_name.current?.select();
-      // }}
+      onPointerUp={() => {
+        if (connection.inProgress && connection.fromNode.id) {
+          fg.pointer_up_id = id;
+        }
+        ref_name.current?.select();
+      }}
     >
       <Handle
         type="source"
@@ -150,7 +150,7 @@ export const RenderNode = (arg: {
       <Handle
         type="target"
         position={Position.Top}
-        className={cx("relative opacity-0")}
+        className={cx("opacity-0")}
       />
       {node && def && (
         <div

@@ -21,6 +21,11 @@ export const nodeBranch = defineNode({
     conditions: {
       label: "Conditions",
       type: "array",
+      className: css`
+        .array-item {
+          border-bottom: 4px solid #e2e8f0;
+        }
+      `,
       fields: {
         condition: { type: "code", idx: 1 },
         name: { idx: 0, type: "string" },

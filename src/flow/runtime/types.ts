@@ -69,4 +69,4 @@ export type PFField = (
       type: "options";
       options: (string | { value: string; label: string })[];
     }
-) & { idx: number; label: string };
+) & { idx: number; label: string; optional?: boolean; className?: string };

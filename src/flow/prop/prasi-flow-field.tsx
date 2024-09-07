@@ -20,7 +20,8 @@ export const PrasiFlowField: FC<{
           "border-b flex text-xs",
           css`
             min-height: 24px;
-          `
+          `,
+          field.className
         )}
       >
         <Tooltip content={label} placement="left">
@@ -93,15 +94,14 @@ export const PrasiFlowField: FC<{
         )}
       </div>
       {field.type === "array" && (
-        <div className={cx("flex flex-col items-stretch")}>
+        <div className={cx("flex flex-col items-stretch", field.className)}>
           {Array.isArray(node[name]) &&
             node[name].map((data, idx) => {
               return (
                 <div
                   key={idx}
                   className={cx(
-                    "flex items-stretch border-b-4",
-                    idx > 0 && "border-t",
+                    "flex items-stretch array-item",
                     idx % 2 ? "even" : "odd"
                   )}
                 >

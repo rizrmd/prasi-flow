@@ -33,6 +33,9 @@ export const Main = () => {
           onResize={(size) => {
             localStorage.setItem("prasi-flow-panel-h", size + "");
           }}
+          className={css`
+            min-width: 250px;
+          `}
         >
           <PrasiFlowProp />
         </Panel>
