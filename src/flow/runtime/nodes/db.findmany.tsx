@@ -8,7 +8,7 @@ export const nodeDbFindMany = defineNode({
   },
   fields: {
     table: {
-      type: "buttons",
+      type: "options",
       optional: true,
       multiple: true,
       options: async () => {
@@ -20,7 +20,11 @@ export const nodeDbFindMany = defineNode({
     },
     select: {
       type: "array",
-      add: {},
+      add: {
+        checkbox: () => {
+          return [];
+        },
+      },
       optional: true,
       render: ({ node }: { node: PFNode }) => {
         return <div>Hello</div>;

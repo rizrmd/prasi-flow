@@ -69,7 +69,7 @@ export type PFField = (
       fields: Record<string, PFField>;
       render: (arg: { node: PFNode; save: () => void }) => ReactElement;
       add?: {
-        checkbox: () => { label: string; value: any }[];
+        checkbox: () => { label: string; value: any; checked?: boolean }[];
         onChange: (checked: any[]) => void;
       };
     }

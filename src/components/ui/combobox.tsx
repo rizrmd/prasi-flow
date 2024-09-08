@@ -59,27 +59,43 @@ export function Combobox({
           <CommandList>
             <CommandEmpty>No Option found.</CommandEmpty>
             <CommandGroup>
-              {_options.map((item) => (
-                <CommandItem
-                  key={item.value}
-                  value={item.value}
-                  className="text-sm"
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setOpen(false);
+              {_options.map((item) => {
+                const is_checked = Array.isArray(value)
+                  ? value.includes(item.value)
+                  : value === item.value;
 
-                    onChange(currentValue);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === item.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {item.el || item.label}
-                </CommandItem>
-              ))}
+                return (
+                  <CommandItem
+                    key={item.value}
+                    value={item.value}
+                    className="text-sm"
+                    onSelect={(currentValue) => {
+                      if (Array.isArray(value)) {
+                        if (!value.includes(item.value)) {
+                          setValue([...value, ...item.value] as any);
+                        } else {
+                          setValue(
+                            value.filter((e) => e !== item.value) as any
+                          );
+                        }
+                      } else {
+                        setValue(currentValue === value ? "" : currentValue);
+                        setOpen(false);
+                      }
+
+                      onChange(currentValue);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        is_checked ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {item.el || item.label}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

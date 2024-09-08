@@ -6,6 +6,8 @@ import TextareaAutosize from "react-textarea-autosize";
 import { PFField, PFNode } from "../runtime/types";
 import { fg } from "../utils/flow-global";
 import { savePF } from "../utils/save-pf";
+import { Popover } from "@/components/ui/popover";
+import { SimplePopover } from "../utils/simple-popover";
 
 export const PrasiFlowField: FC<{
   field: PFField;
@@ -81,7 +83,7 @@ export const PrasiFlowField: FC<{
         {field.type === "options" && (
           <Combobox
             options={local.options}
-            defaultValue={node[name]}
+            defaultValue={field.multiple ? node[name] || [] : node[name]}
             onChange={(value) => {
               node[name] = value;
               fg.prop?.render();
@@ -93,11 +95,30 @@ export const PrasiFlowField: FC<{
             `}
           >
             {({ setOpen }) => {
-              const current_value = local.options[node[name]];
+              let selected = <></>;
+              if (field.multiple) {
+                const counts = local.options.filter((e) => {
+                  return e.value === value;
+                });
+
+                if (counts.length === 1) {
+                  selected = <>{counts[0].el || counts[0].label}</>;
+                } else {
+                  selected = (
+                    <>{counts.length ? `${counts.length} selected` : ``}</>
+                  );
+                }
+              } else {
+                const current = local.options.find((e) => {
+                  return e.value === value;
+                });
+                selected = <> {current?.el || current?.label}</>;
+              }
+
               return (
                 <div className="flex flex-1 border-l items-stretch cursor-pointer hover:bg-blue-50">
                   <div className="flex-1 flex px-1 items-center">
-                    {current_value?.el || current_value?.label}
+                    {selected}
                   </div>
                   <div className="flex w-[25px] items-center justify-center">
                     <ChevronDown size={12} />
@@ -169,30 +190,37 @@ export const PrasiFlowField: FC<{
           </div>
         )}
         {field.type === "array" && (
-          <div className="flex-1 justify-end items-center flex">
-            <div
-              className={cx(
-                "border px-2 text-[11px] mr-[2px] cursor-pointer hover:bg-blue-600 hover:border-blue-600 hover:text-white"
-              )}
-              onClick={() => {
-                const item = {} as any;
-                if (field.fields) {
-                  for (const [k, v] of Object.entries(field.fields)) {
-                    item[k] = "";
-                  }
-                  if (!Array.isArray(node[name])) {
-                    node[name] = [];
-                  }
-                  node[name].push(item);
+          <SimplePopover
+            content={<>Hello</>}
+            disabled={typeof field.add?.checkbox === "undefined"}
+          >
+            <div className="flex-1 justify-end items-center flex">
+              <div
+                className={cx(
+                  "border px-2 text-[11px] mr-[2px] cursor-pointer hover:bg-blue-600 hover:border-blue-600 hover:text-white"
+                )}
+                onClick={() => {
+                  if (typeof field.add?.checkbox === "undefined") {
+                    const item = {} as any;
+                    if (field.fields) {
+                      for (const [k, v] of Object.entries(field.fields)) {
+                        item[k] = "";
+                      }
+                      if (!Array.isArray(node[name])) {
+                        node[name] = [];
+                      }
+                      node[name].push(item);
 
-                  fg.prop?.render();
-                  savePF(fg.pf);
-                }
-              }}
-            >
-              + Add
+                      fg.prop?.render();
+                      savePF(fg.pf);
+                    }
+                  }
+                }}
+              >
+                + Add
+              </div>
             </div>
-          </div>
+          </SimplePopover>
         )}
         {field.optional && node[name] && (
           <div
