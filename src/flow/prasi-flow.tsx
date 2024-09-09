@@ -24,6 +24,7 @@ import { parseFlow } from "./utils/parse-flow";
 import { RenderEdge } from "./utils/render-edge";
 import { RenderNode } from "./utils/render-node";
 import { savePF } from "./utils/save-pf";
+import { EdgeType } from "./utils/parse-node";
 
 export function PrasiFlow() {
   const local = useLocal({
@@ -39,6 +40,7 @@ export function PrasiFlow() {
     action: {
       resetSelectedElements: () => {},
       addSelectedNodes: () => {},
+      addSelectedEdges: () => {},
     },
   });
   fg.main = local;
@@ -111,6 +113,8 @@ export function PrasiFlow() {
 
   fg.reload = (relayout?: boolean) => {
     if (fg.pf) {
+      const selection = { ...fg.prop?.selection };
+
       const parsed = parseFlow(fg.pf);
 
       if (relayout) {
@@ -119,6 +123,19 @@ export function PrasiFlow() {
         setNodes(parsed.nodes);
         setEdges(parsed.edges);
       }
+
+      setTimeout(() => {
+        fg.main?.action.resetSelectedElements();
+
+        fg.main?.action.addSelectedEdges(
+          selection.edges?.map((e) => e.id) || []
+        );
+
+        fg.main?.action.addSelectedNodes(
+          selection.nodes?.map((e) => e.id) || []
+        );
+
+      });
     }
   };
 
@@ -211,7 +228,10 @@ export function PrasiFlow() {
         edgeTypes={local.edgeTypes}
         onSelectionChange={(changes) => {
           if (fg.prop) {
-            fg.prop.selection = changes;
+            fg.prop.selection = {
+              ...changes,
+              loading: fg.prop.selection.loading,
+            };
             fg.prop.render();
           }
         }}
@@ -417,6 +437,9 @@ export function PrasiFlow() {
         nodes={nodes}
         edges={edges}
         onConnectEnd={(_, state) => {
+          const pf = local.pf;
+          if (!pf) return;
+
           let from_id = "";
           let to_id = "";
           const from = state.fromNode;
@@ -429,18 +452,17 @@ export function PrasiFlow() {
             if (fg.pointer_up_id) {
               to_id = fg.pointer_up_id;
               fg.pointer_up_id = "";
-            } else if (local.pf) {
+            } else {
               const found = edges.find((e) => e.source === from_id);
-              const f = findFlow({ id: from_id, pf: local.pf });
+              const f = findFlow({ id: from_id, pf: pf });
 
               if (found) {
                 const new_node = {
                   type: "code",
-                  name: "New Node",
                   id: createId(),
                   position: fg.pointer_to as any,
                 };
-                local.pf.nodes[new_node.id] = new_node;
+                pf.nodes[new_node.id] = new_node;
                 to_id = new_node.id;
                 if (f) {
                   const new_flow = f.flow.splice(
@@ -448,7 +470,7 @@ export function PrasiFlow() {
                     f.flow.length - f.idx - 1
                   );
                   if (new_flow.length > 0) {
-                    local.pf.flow[new_flow[0]] = new_flow;
+                    pf.flow[new_flow[0]] = new_flow;
                   }
                 }
               } else {
@@ -460,16 +482,20 @@ export function PrasiFlow() {
                   position.x -= 70;
                   fg.pointer_to = null;
                   const new_node = {
-                    name: "New Node",
                     type: "code",
                     id: createId(),
                     position,
                   };
-                  local.pf.nodes[new_node.id] = new_node;
+                  pf.nodes[new_node.id] = new_node;
 
-                  f.flow.push(new_node.id);
-
-                  savePF(local.pf);
+                  const from_node = pf.nodes[from.id];
+                  if (from_node.branches) {
+                    const branch = from_node.branches[0];
+                    if (branch) branch.flow.push(new_node.id);
+                  } else {
+                    f.flow.push(new_node.id);
+                  }
+                  savePF(pf);
                   fg.reload();
 
                   setTimeout(() => {
@@ -489,10 +515,20 @@ export function PrasiFlow() {
               return e.source === from_id && e.target === to_id;
             });
 
-            const pf = local.pf;
-
             if (!found && pf) {
+              // setEdges([
+              //   ...edges,
+              //   {
+              //     id: `${from_id}-${to_id}`,
+              //     source: from_id,
+              //     target: to_id,
+              //     type: EdgeType,
+              //     animated: true,
+              //   },
+              // ]);
+
               const from_node = pf.nodes[from_id];
+
               if (from_node) {
                 if (from_node.branches) {
                   let picked_branches = from_node.branches?.find(
@@ -537,11 +573,18 @@ export function PrasiFlow() {
 }
 
 const Selection = () => {
-  const { resetSelectedElements, addSelectedNodes } = useStore((store) => ({
-    resetSelectedElements: store.resetSelectedElements,
-    addSelectedNodes: store.addSelectedNodes,
-  }));
+  const { resetSelectedElements, addSelectedNodes, addSelectedEdges } =
+    useStore((store) => ({
+      resetSelectedElements: store.resetSelectedElements,
+      addSelectedNodes: store.addSelectedNodes,
+      addSelectedEdges: store.addSelectedEdges,
+    }));
 
-  if (fg.main) fg.main.action = { resetSelectedElements, addSelectedNodes };
+  if (fg.main)
+    fg.main.action = {
+      resetSelectedElements,
+      addSelectedNodes,
+      addSelectedEdges,
+    };
   return <></>;
 };

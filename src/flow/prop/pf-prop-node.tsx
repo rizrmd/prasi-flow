@@ -3,9 +3,9 @@ import { PFField, PFNode } from "../runtime/types";
 import { fg } from "../utils/flow-global";
 import { getNodeFields } from "../utils/get-node-fields";
 import { savePF } from "../utils/save-pf";
-import { PrasiFlowField } from "./prasi-flow-field";
+import { PFPropNodeField } from "./pf-prop-node-field";
 
-export const PrasiFlowFields: FC<{ node: PFNode }> = ({ node }) => {
+export const PFPropNode: FC<{ node: PFNode }> = ({ node }) => {
   const field = getNodeFields(node);
 
   const def = field?.definition;
@@ -40,7 +40,7 @@ export const PrasiFlowFields: FC<{ node: PFNode }> = ({ node }) => {
         .sort((a, b) => a[1].idx - b[1].idx)
         .map(([key, item]) => {
           return (
-            <PrasiFlowField
+            <PFPropNodeField
               key={key}
               field={item}
               name={key}

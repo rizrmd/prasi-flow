@@ -40,7 +40,7 @@ export const PrasiFlowRunner = () => {
         `
       )}
     >
-      <div className="border-b h-[40px] text-sm px-2 flex justify-between items-stretch space-x-1">
+      <div className="border-b select-none h-[40px] text-sm px-2 flex justify-between items-stretch space-x-1">
         <div className="flex items-center space-x-[5px]">
           <Tooltip content={"Run Flow"}>
             <div
@@ -222,7 +222,9 @@ export const PrasiFlowRunner = () => {
                       >
                         {e.node.type}
                       </div>
-                      <div className="flex-1">{e.node.type !== "start" ? e.node.name : ""}</div>
+                      <div className="flex-1">
+                        {e.node.type !== "start" ? e.node.name : ""}
+                      </div>
                       <div className={cx("text-slate-400 node-type pr-2")}>
                         {e.node.id}
                       </div>

@@ -32,7 +32,10 @@ export function Combobox({
   )[];
   onChange: (value: string) => void;
   defaultValue: string;
-  children: (opt: { setOpen: (open: boolean) => void }) => React.ReactElement;
+  children: (opt: {
+    setOpen: (open: boolean) => void;
+    open: boolean;
+  }) => React.ReactElement;
 }) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(defaultValue);
@@ -41,9 +44,10 @@ export function Combobox({
     if (typeof e === "string") return { label: e, value: e };
     return e;
   });
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{children({ setOpen })}</PopoverTrigger>
+      <PopoverTrigger asChild>{children({ setOpen, open })}</PopoverTrigger>
       <PopoverContent className={cx("w-[200px] p-0", className)}>
         <Command>
           <CommandInput
@@ -57,7 +61,7 @@ export function Combobox({
             )}
           />
           <CommandList>
-            <CommandEmpty>No Option found.</CommandEmpty>
+            <CommandEmpty>No option found.</CommandEmpty>
             <CommandGroup>
               {_options.map((item) => {
                 const is_checked = Array.isArray(value)

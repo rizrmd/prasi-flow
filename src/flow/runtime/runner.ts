@@ -89,6 +89,14 @@ const runSingleNode = async (arg: {
   try {
     const execute_node = await new Promise<PFNodeBranch | void>(
       async (resolve, reject) => {
+        if (current.branches) {
+          run_visit.branching = true;
+
+          if (after_node) {
+            after_node({ visited: visited, node: current });
+          }
+        }
+
         try {
           await def.process({
             vars,
@@ -100,14 +108,6 @@ const runSingleNode = async (arg: {
             },
             processBranch: async (branch) => {
               run_visit.tstamp = Date.now();
-
-              if (!run_visit.branching) {
-                run_visit.branching = true;
-
-                if (after_node) {
-                  after_node({ visited: visited, node: current });
-                }
-              }
 
               for (const id of branch.flow) {
                 const current = pf.nodes[id];
@@ -170,7 +170,8 @@ const runSingleNode = async (arg: {
         }
       }
     }
-    return true;
+    if (!run_visit.branching) return true;
+    return false;
   } catch (e: any) {
     run_visit.tstamp = Date.now();
     if (e) {

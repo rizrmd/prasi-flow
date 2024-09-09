@@ -1,15 +1,19 @@
 import { Combobox } from "@/components/ui/combobox";
 import { Tooltip } from "@/components/ui/tooltip";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { FC, useEffect, useRef } from "react";
+import { FC, useRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { PFField, PFNode } from "../runtime/types";
 import { fg } from "../utils/flow-global";
 import { savePF } from "../utils/save-pf";
-import { Popover } from "@/components/ui/popover";
 import { SimplePopover } from "../utils/simple-popover";
+import { restoreFocus, lockFocus } from "../utils/caret-pos";
 
-export const PrasiFlowField: FC<{
+const focus = {
+  timeout: null as any,
+};
+
+export const PFPropNodeField: FC<{
   field: PFField;
   node: PFNode;
   name: string;
@@ -17,6 +21,11 @@ export const PrasiFlowField: FC<{
 }> = ({ field, node, name, value }) => {
   const label = field.label || name;
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  const save = () => {
+    fg.prop?.render();
+    savePF(fg.pf);
+  };
 
   const local = useLocal(
     {
@@ -67,7 +76,7 @@ export const PrasiFlowField: FC<{
         </Tooltip>
         {field.type === "string" && (
           <TextareaAutosize
-            ref={ref}
+            ref={restoreFocus(node[name], ref)}
             className={cx(
               "flex-1 outline-none p-1 border-l resize-none min-w-0 w-full bg-transparent"
             )}
@@ -76,7 +85,15 @@ export const PrasiFlowField: FC<{
             onChange={(e) => {
               const value = e.currentTarget.value;
               node[name] = value;
-              fg.prop?.render();
+
+              save();
+
+              clearTimeout(focus.timeout);
+
+              lockFocus(node[name], ref);
+              focus.timeout = setTimeout(() => {
+                fg.reload(false);
+              }, 1000);
             }}
           />
         )}
@@ -86,7 +103,7 @@ export const PrasiFlowField: FC<{
             defaultValue={field.multiple ? node[name] || [] : node[name]}
             onChange={(value) => {
               node[name] = value;
-              fg.prop?.render();
+              save();
             }}
             className={css`
               * {
@@ -168,7 +185,7 @@ export const PrasiFlowField: FC<{
                     } else {
                       node[name] = e.value;
                     }
-                    fg.prop?.render();
+                    save();
                   }}
                 >
                   {e.el || e.label}
@@ -191,13 +208,13 @@ export const PrasiFlowField: FC<{
         )}
         {field.type === "array" && (
           <SimplePopover
-            content={<>Hello</>}
+            content={<div className={cx("text-xs")}>Hello</div>}
             disabled={typeof field.add?.checkbox === "undefined"}
           >
             <div className="flex-1 justify-end items-center flex">
               <div
                 className={cx(
-                  "border px-2 text-[11px] mr-[2px] cursor-pointer hover:bg-blue-600 hover:border-blue-600 hover:text-white"
+                  "border select-none px-2 text-[11px] mr-[2px] cursor-pointer hover:bg-blue-600 hover:border-blue-600 hover:text-white"
                 )}
                 onClick={() => {
                   if (typeof field.add?.checkbox === "undefined") {
@@ -210,9 +227,7 @@ export const PrasiFlowField: FC<{
                         node[name] = [];
                       }
                       node[name].push(item);
-
-                      fg.prop?.render();
-                      savePF(fg.pf);
+                      save();
                     }
                   }
                 }}
@@ -227,8 +242,7 @@ export const PrasiFlowField: FC<{
             className="del flex items-center justify-center w-[25px] border-l cursor-pointer hover:bg-red-100"
             onClick={() => {
               delete node[name];
-              fg.prop?.render();
-              savePF(fg.pf);
+              save();
             }}
           >
             <Trash2 size={14} />
@@ -251,10 +265,7 @@ export const PrasiFlowField: FC<{
                   {field.render ? (
                     field.render({
                       node,
-                      save: () => {
-                        fg.prop?.render();
-                        savePF(fg.pf);
-                      },
+                      save,
                     })
                   ) : (
                     <>
@@ -266,7 +277,7 @@ export const PrasiFlowField: FC<{
                           .sort((a, b) => a[1].idx - b[1].idx)
                           .map(([key, field]) => {
                             return (
-                              <PrasiFlowField
+                              <PFPropNodeField
                                 key={key}
                                 field={field}
                                 name={key}
@@ -280,8 +291,7 @@ export const PrasiFlowField: FC<{
                         className="del flex items-center justify-center w-[25px] border-l border-b cursor-pointer hover:bg-red-100"
                         onClick={() => {
                           node[name].splice(idx, 1);
-                          fg.prop?.render();
-                          savePF(fg.pf);
+                          save();
                         }}
                       >
                         <Trash2 size={14} />

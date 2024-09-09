@@ -9,9 +9,33 @@ export const nodeBranch = defineNode({
     }
     if (node.branches) {
       let i = 0;
+
+      for (const [i, c] of Object.entries(
+        (node.conditions || []) as { condition: string; name: string }[]
+      )) {
+        const idx = i as unknown as number;
+        if (node.branches[idx]) {
+          node.branches[idx].idx = idx;
+          node.branches[idx].code = c.condition;
+          node.branches[idx].name = c.name;
+        } else {
+          node.branches[idx] = {
+            idx,
+            code: c.condition,
+            name: c.name,
+            flow: [],
+          } as any;
+        }
+      }
+
       for (const branch of node.branches) {
-        if (typeof branch.idx === "undefined") {
-          branch.idx = i;
+        if (
+          typeof branch.idx === "undefined" ||
+          branch.idx >= node.conditions.length
+        ) {
+          if (!node.unused_branches) node.unused_branches = [];
+          node.unused_branches.push(branch);
+          node.branches = node.branches.filter((e) => e !== branch);
         }
         i++;
       }

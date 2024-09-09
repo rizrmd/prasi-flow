@@ -106,10 +106,6 @@ export const parseNodes = (
             continue;
           }
 
-          if (node.id === "q0xfupwinyi439v8pqaght0a") {
-            console.log(node, branch);
-          }
-
           rf_edges.push({
             id: edge_id,
             source: node.id,

@@ -6,6 +6,7 @@ export type PrasiFlowPropLocal = {
   selection: {
     nodes: Node[];
     edges: Edge[];
+    loading: boolean;
   };
 };
 
@@ -22,6 +23,7 @@ const fg_default = {
     action: {
       resetSelectedElements: () => void;
       addSelectedNodes: (arg: string[]) => void;
+      addSelectedEdges: (arg: string[]) => void;
     };
   },
   run: null as null | PFRunResult,

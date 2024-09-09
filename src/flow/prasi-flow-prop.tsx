@@ -1,4 +1,5 @@
-import { PrasiFlowFields } from "./prop/prasi-flow-fields";
+import { PFPropNode } from "./prop/pf-prop-node";
+import { PFPropEdge } from "./prop/pf-prop.edge";
 import { fg, PrasiFlowPropLocal } from "./utils/flow-global";
 
 export const PrasiFlowProp = () => {
@@ -6,6 +7,7 @@ export const PrasiFlowProp = () => {
     selection: {
       nodes: [],
       edges: [],
+      loading: false,
     },
   } as PrasiFlowPropLocal);
   fg.prop = local;
@@ -14,9 +16,13 @@ export const PrasiFlowProp = () => {
   const rf_node = local.selection.nodes[0];
   const pf_node = rf_node ? fg.pf?.nodes[rf_node.id] : undefined;
 
+  if (sel.loading) {
+    sel.loading = false;
+    return null;
+  }
   return (
     <div className={cx("flex flex-col flex-1 w-full h-full ")}>
-      {sel.nodes.length !== 1 ? (
+      {sel.nodes.length !== 1 && sel.edges.length !== 1 ? (
         <div
           className={cx(
             "flex items-center justify-center flex-1 flex-col space-y-1"
@@ -48,7 +54,16 @@ export const PrasiFlowProp = () => {
           )}
         </div>
       ) : (
-        <>{pf_node && <PrasiFlowFields node={pf_node} />}</>
+        <>
+          {sel.edges.length === 1 && (
+            <>
+              <PFPropEdge edge={sel.edges[0]} />
+            </>
+          )}
+          {sel.nodes.length === 1 && (
+            <>{pf_node && <PFPropNode node={pf_node} />}</>
+          )}
+        </>
       )}
     </div>
   );

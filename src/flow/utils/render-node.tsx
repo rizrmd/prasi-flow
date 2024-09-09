@@ -1,8 +1,7 @@
 import { Combobox } from "@/components/ui/combobox";
 import { Handle, Node, Position, useConnection, useStore } from "@xyflow/react";
-import capitalize from "lodash.capitalize";
-import { Unplug } from "lucide-react";
-import { Fragment, useEffect, useRef } from "react";
+import { Move } from "lucide-react";
+import { Fragment, useRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { allNodeDefinitions } from "../runtime/nodes";
 import { PFNodeDefinition } from "../runtime/types";
@@ -23,11 +22,13 @@ export const RenderNode = (arg: {
     reset: actions.resetSelectedElements,
   }));
 
-  useEffect(() => {
-    setTimeout(() => {
-      if (ref_name.current) ref_name.current.select();
-    });
-  }, [fg.prop?.selection.nodes.find((e) => e.id === id)]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     if (fg.prop?.selection.nodes.find((e) => e.id === id)) {
+  //       if (ref_name.current) ref_name.current.select();
+  //     }
+  //   });
+  // }, [fg.prop?.selection.nodes.find((e) => e.id === id)]);
 
   if (connection.inProgress) {
     fg.pointer_to = connection.to;
@@ -44,14 +45,18 @@ export const RenderNode = (arg: {
     <div
       ref={ref_node}
       className={cx(
-        "border border-slate-600 rounded-sm relative",
+        "border border-slate-600 rounded-sm",
         def?.className,
         css`
-          .source-edge svg {
+          .source-edge svg,
+          .node-move,
+          .node-id {
             opacity: 0;
           }
           &:hover {
-            .source-edge svg {
+            .source-edge sv,
+            .node-move,
+            .node-id {
               opacity: 1;
             }
           }
@@ -95,16 +100,66 @@ export const RenderNode = (arg: {
         if (connection.inProgress && connection.fromNode.id) {
           fg.pointer_up_id = id;
         }
-        ref_name.current?.select();
+
+        if (fg.prop?.selection.nodes.find((e) => e.id === id)) {
+          ref_name.current?.select();
+        }
       }}
     >
+      <div className="node-id transition-all absolute top-[-15px] left-0 text-[8px] pointer-events-none">
+        {id}
+      </div>
+
+      <div
+        className={cx(
+          "node-move transition-all",
+          css`
+            position: absolute;
+            top: 3px;
+            right: -30px;
+            padding-left: 5px;
+          `
+        )}
+      >
+        <div
+          className={cx(
+            "flex items-center justify-center cursor-pointer",
+            css`
+              width: 25px;
+              height: 25px;
+              border: 1px dashed black;
+              border-radius: 5px;
+              &:hover {
+                border: 1px solid blue;
+                background: blue;
+                svg {
+                  color: white;
+                }
+              }
+            `
+          )}
+        >
+          <Move size={14} />
+        </div>
+      </div>
       <Handle
         type="source"
         position={Position.Bottom}
         className={cx(
           "source-edge",
           css`
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            transform: none;
             border-radius: 0;
+            border: 0;
+            background: transparent;
+
+            /* border-radius: 0;
             border: 1px solid transparent;
             background: none;
             &:after {
@@ -126,27 +181,10 @@ export const RenderNode = (arg: {
               &:after {
                 border: 1px dashed black;
               }
-            }
+            } */
           `
         )}
-      >
-        <div
-          className={cx(
-            "flex items-center justify-center",
-            css`
-              position: absolute;
-              transform: none;
-              top: -25px;
-              left: ${left}px;
-              width: 25px;
-              height: 25px;
-              border: 1px solid transparent;
-            `
-          )}
-        >
-          <Unplug size={14} />
-        </div>
-      </Handle>
+      ></Handle>
       <Handle
         type="target"
         position={Position.Top}
@@ -161,7 +199,7 @@ export const RenderNode = (arg: {
         >
           <div
             className={cx(
-              "line-type flex items-center pl-2 ",
+              "line-type flex items-center ",
               !node.name && "justify-center pr-2",
               css`
                 svg {
@@ -171,6 +209,13 @@ export const RenderNode = (arg: {
               `
             )}
           >
+            <div
+              className={cx(
+                css`
+                  height: 28px;
+                `
+              )}
+            ></div>
             <Combobox
               options={Object.keys(allNodeDefinitions)
                 .filter((e) => e !== "start")
@@ -234,15 +279,12 @@ export const RenderNode = (arg: {
                 }
               `}
             >
-              {({ setOpen }) => (
+              {({ setOpen, open }) => (
                 <div
-                  className="flex items-center py-1 space-x-1"
-                  onClickCapture={(e) => {
+                  className="absolute hover:bg-slate-200 rounded-sm ml-[1px] z-10 px-2 flex items-center py-1 space-x-1"
+                  onClick={(e) => {
+                    setOpen(true);
                     e.stopPropagation();
-                    selection.add([id]);
-                    setTimeout(() => {
-                      setOpen(true);
-                    }, 100);
                   }}
                 >
                   <div dangerouslySetInnerHTML={{ __html: def.icon }}></div>

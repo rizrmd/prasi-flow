@@ -16,7 +16,6 @@ export const createNode = <T extends keyof PRASI_NODE_DEFS>(
   const definition = allNodeDefinitions[create.type];
   const node = {
     id: createId(),
-    name: "New Node",
     type: definition.type,
     vars: structuredClone(create.vars),
     branches: structuredClone(create.branches),
